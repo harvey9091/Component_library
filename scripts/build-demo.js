@@ -87,15 +87,26 @@ async function buildDemos() {
     // Make dependencies available globally
     window.React = React;
     window.ReactDOM = ReactDOM;
-    window.LucideIcons = lucide;
     
-    // Polyfill for require to handle external dependencies
-    window.require = function(moduleName) {
-      if (moduleName === 'react') return React;
-      if (moduleName === 'react-dom') return ReactDOM;
-      if (moduleName === 'lucide-react') return lucide;
-      throw new Error('Module not found: ' + moduleName);
-    };
+    // Handle lucide-react differently - it might be exported as 'lucide' or have icons directly
+    window.LucideIcons = lucide || window.lucide || {};
+    
+    // Create a more robust require polyfill
+    function require(moduleName) {
+      switch (moduleName) {
+        case 'react':
+          return React;
+        case 'react-dom':
+          return ReactDOM;
+        case 'lucide-react':
+          return window.LucideIcons;
+        default:
+          throw new Error('Module not found: ' + moduleName);
+      }
+    }
+    
+    // Attach to window for global access
+    window.require = require;
     
     // Also provide module.exports for CommonJS compatibility
     window.module = { exports: {} };
@@ -108,8 +119,12 @@ async function buildDemos() {
   <script>
     // Render the component
     try {
-      // Get the component from the global namespace or module.exports
-      const Component = window.DemoComponent.default || window.DemoComponent || window.module.exports.default || window.module.exports;
+      // Get the component from various possible locations
+      const Component = window.DemoComponent?.default || 
+                       window.DemoComponent || 
+                       window.module?.exports?.default || 
+                       window.module?.exports ||
+                       DemoComponent;
       
       if (Component) {
         const rootElement = document.getElementById('root');
@@ -120,7 +135,7 @@ async function buildDemos() {
       }
     } catch (error) {
       console.error('Error rendering component:', error);
-      document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p></div>';
+      document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p><p class="text-xs mt-2">Check console for details</p></div>';
     }
   </script>
 </body>
