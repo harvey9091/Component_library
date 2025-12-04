@@ -677,12 +677,13 @@ var DemoComponent = (() => {
         /* @__PURE__ */ import_react3.default.createElement("div", { className: "relative flex flex-col items-center justify-center transition-all duration-300 ease-out" }, /* @__PURE__ */ import_react3.default.createElement(
           Icon2,
           {
-            size: 26,
-            strokeWidth: isActive ? 2 : 1.5,
             className: `
                       relative z-10 transition-colors duration-300
                       ${isActive ? "text-white drop-shadow-[0_0_12px_rgba(239,68,68,1)]" : "text-white/20 group-hover:text-red-400"}
-                    `
+                    `,
+            width: 26,
+            height: 26,
+            strokeWidth: isActive ? 2 : 1.5
           }
         ))
       );
@@ -702,23 +703,6 @@ var DemoComponent = (() => {
     )), /* @__PURE__ */ import_react4.default.createElement("div", { className: "mt-8 text-white" }, /* @__PURE__ */ import_react4.default.createElement("p", null, "Active Tab: ", activeTab)));
   };
   var demo_default = PremiumNavBarDemo;
-    // Expose React and ReactDOM globally for the demo
-  try {
-    if (typeof require_react === 'function') {
-      window.React = require_react();
-    }
-  } catch (e) {
-    console.warn('Could not expose React globally:', e);
-  }
-  
-  try {
-    if (typeof require_react_dom === 'function') {
-      window.ReactDOM = require_react_dom();
-    }
-  } catch (e) {
-    console.warn('Could not expose ReactDOM globally:', e);
-  }
-  
   return __toCommonJS(demo_exports);
 })();
 /*! Bundled license information:

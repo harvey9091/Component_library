@@ -97,11 +97,15 @@
     }
   </script>
   
-  <!-- Load the bundled component (includes all dependencies: React, ReactDOM, lucide-react) -->
+  <!-- Load React and ReactDOM from CDN as fallback -->
+  <script src="https://unpkg.com/react@19.2.1/umd/react.development.js" onload="window.reactLoaded = true;"></script>
+  <script src="https://unpkg.com/react-dom@19.2.1/umd/react-dom.development.js" onload="window.reactDOMLoaded = true;"></script>
+  
+  <!-- Load the bundled component -->
   <script>
     console.log('Demo: loading bundle: ./PremiumNavBar.bundle.js');
   </script>
-  <script src="./PremiumNavBar.bundle.js?v=1764859800242"></script>
+  <script src="./PremiumNavBar.bundle.js?v=1764860711421"></script>
   <script>
     console.log('Demo: bundle loaded');
   </script>
@@ -111,30 +115,6 @@
     document.addEventListener('DOMContentLoaded', function() {
       try {
         console.log('Demo: Starting component rendering process...');
-        
-        // Check if React is available globally (it should be bundled)
-        console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
-        console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
-        
-        // Check if we have the component
-        console.log('Demo: Bundle exports:', Object.keys(typeof DemoComponent !== 'undefined' ? DemoComponent : {}));
-        
-        if (typeof DemoComponent === 'undefined') {
-          console.error('Demo: DemoComponent is not defined');
-          showError('DemoComponent is not defined. Check browser console for details.');
-          return;
-        }
-        
-        // Get the component
-        const Component = DemoComponent.default || DemoComponent;
-        
-        if (!Component) {
-          console.error('Demo: Component not found in DemoComponent');
-          showError('Component not found in DemoComponent. Check browser console for details.');
-          return;
-        }
-        
-        console.log('Demo: Found DemoComponent:', typeof Component);
         
         // Render the component
         const rootElement = document.getElementById('root');
@@ -149,31 +129,61 @@
         
         // Try to render with React
         try {
-          // Check if React is available in the bundle or globally
-          const reactLib = window.React || (typeof DemoComponent !== 'undefined' && DemoComponent.React) || null;
-          const reactDOMLib = window.ReactDOM || (typeof DemoComponent !== 'undefined' && DemoComponent.ReactDOM) || null;
-          
-          console.log('Demo: React library available:', !!reactLib, reactLib?.version ? 'version: ' + reactLib.version : '');
-          console.log('Demo: ReactDOM library available:', !!reactDOMLib, reactDOMLib?.version ? 'version: ' + reactDOMLib.version : '');
-          
-          if (reactLib && reactDOMLib) {
-            if (reactDOMLib.createRoot) {
-              console.log('Demo: Using createRoot with available React');
-              const root = reactDOMLib.createRoot(rootElement);
-              const element = reactLib.createElement(Component);
-              root.render(element);
-              console.log('Demo: Mount succeeded');
-            } else if (reactDOMLib.render) {
-              console.log('Demo: Using legacy render with available React');
-              const element = reactLib.createElement(Component);
-              reactDOMLib.render(element, rootElement);
-              console.log('Demo: Mount succeeded');
-            } else {
-              throw new Error('No rendering method found in ReactDOM');
+          // Wait for React and ReactDOM to be fully loaded
+          function renderWhenReady(attempts = 0) {
+            if (attempts > 50) {
+              console.error('Demo: React or ReactDOM failed to load after 5 seconds');
+              showError('React or ReactDOM failed to load after 5 seconds');
+              return;
             }
-          } else {
-            throw new Error('React or ReactDOM not available');
+            
+            // Check if React and ReactDOM are available
+            console.log('Demo: Checking React availability - Attempt ' + (attempts + 1));
+            console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
+            console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
+            
+            // Check if we have the component
+            console.log('Demo: Bundle exports:', Object.keys(typeof DemoComponent !== 'undefined' ? DemoComponent : {}));
+            
+            if (typeof DemoComponent === 'undefined') {
+              console.error('Demo: DemoComponent is not defined');
+              showError('DemoComponent is not defined. Check browser console for details.');
+              return;
+            }
+            
+            // Get the component
+            const Component = DemoComponent.default || DemoComponent;
+            
+            if (!Component) {
+              console.error('Demo: Component not found in DemoComponent');
+              showError('Component not found in DemoComponent. Check browser console for details.');
+              return;
+            }
+            
+            console.log('Demo: Found DemoComponent:', typeof Component);
+            
+            if (typeof ReactDOM !== 'undefined' && typeof React !== 'undefined') {
+              if (ReactDOM.createRoot) {
+                console.log('Demo: Using createRoot');
+                const root = ReactDOM.createRoot(rootElement);
+                const element = React.createElement(Component);
+                root.render(element);
+                console.log('Demo: Mount succeeded');
+              } else if (ReactDOM.render) {
+                console.log('Demo: Using legacy render');
+                const element = React.createElement(Component);
+                ReactDOM.render(element, rootElement);
+                console.log('Demo: Mount succeeded');
+              } else {
+                throw new Error('No rendering method found');
+              }
+            } else {
+              // Wait 100ms and try again
+              setTimeout(() => renderWhenReady(attempts + 1), 100);
+            }
           }
+          
+          renderWhenReady();
         } catch (renderError) {
           console.error('Demo: Mount failed:', renderError);
           console.error('Demo: Render error stack:', renderError.stack);
