@@ -57,7 +57,7 @@ async function testComponentPreview() {
     
     // Wait for some time to let the component render
     console.log('Waiting for component to render...');
-    await page.waitForTimeout(5000);
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     // Check if the component rendered by looking for specific elements
     try {
