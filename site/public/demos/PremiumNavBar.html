@@ -7,6 +7,38 @@
   <style>
     /*! Minimal CSS reset and Tailwind utilities */
     *,::before,::after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}*{margin:0;padding:0}html{line-height:1.5;-webkit-text-size-adjust:100%;font-family:ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}body{min-height:100vh}.flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.gap-4{gap:1rem}.p-4{padding:1rem}.text-center{text-align:center}.text-xl{font-size:1.25rem;line-height:1.75rem}.font-bold{font-weight:700}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity))}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246/var(--tw-bg-opacity))}.min-h-screen{min-height:100vh}.w-full{width:100%}.rounded-lg{border-radius:.5rem}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color),0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.p-6{padding:1.5rem}.mb-2{margin-bottom:.5rem}
+    
+    /* Error overlay styles */
+    .error-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #ff0000;
+      color: white;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      font-family: monospace;
+      overflow: auto;
+    }
+    
+    .error-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    
+    .error-message {
+      font-size: 1rem;
+      max-width: 80%;
+      text-align: center;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
@@ -21,70 +53,94 @@
     // Simple error handling
     window.onerror = function(message, source, lineno, colno, error) {
       console.error('Global error:', message, 'at', source, ':', lineno, ':', colno);
-      document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>' + message + '</p><p class="text-xs mt-2">Check console for details</p></div>';
+      showError('Global Error: ' + message);
+      return true;
     };
+    
+    // Promise rejection handler
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('Unhandled promise rejection:', event.reason);
+      showError('Promise Rejection: ' + event.reason);
+      event.preventDefault();
+    });
+    
+    // Show error overlay
+    function showError(message) {
+      // Remove existing error overlay if present
+      const existingOverlay = document.querySelector('.error-overlay');
+      if (existingOverlay) {
+        existingOverlay.remove();
+      }
+      
+      // Create error overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'error-overlay';
+      overlay.innerHTML = `
+        <div class="error-title">DEMO RENDERING ERROR</div>
+        <div class="error-message">${message}</div>
+        <div class="error-message" style="margin-top: 1rem; font-size: 0.8rem;">Check browser console for detailed stack trace</div>
+      `;
+      document.body.appendChild(overlay);
+    }
+    
+    // Try to connect to live-reload websocket (optional)
+    try {
+      const ws = new WebSocket('ws://localhost:8081');
+      ws.onopen = function() {
+        console.log('Demo: Live-reload WebSocket connected');
+      };
+      ws.onerror = function() {
+        console.log('Demo: Live-reload WebSocket connection failed (continuing without live-reload)');
+      };
+    } catch (e) {
+      console.log('Demo: Live-reload WebSocket unavailable (continuing without live-reload)');
+    }
   </script>
   
-  <!-- Load React library -->
-  <script src="./PremiumNavBar.react.bundle.js"></script>
-  
-  <!-- Load ReactDOM library -->
-  <script src="./PremiumNavBar.react-dom.bundle.js"></script>
-  
-  <!-- Load the component bundle -->
-  <script src="./PremiumNavBar.component.bundle.js"></script>
+  <!-- Load the bundled component (includes all dependencies: React, ReactDOM, lucide-react) -->
+  <script>
+    console.log('Demo: loading bundle: ./PremiumNavBar.bundle.js');
+  </script>
+  <script src="./PremiumNavBar.bundle.js"></script>
+  <script>
+    console.log('Demo: bundle loaded');
+  </script>
   
   <script>
     // Render the component
     document.addEventListener('DOMContentLoaded', function() {
       try {
-        console.log('Starting component rendering process...');
+        console.log('Demo: Starting component rendering process...');
         
-        // Check if we have the React libraries
-        if (typeof ReactLibrary === 'undefined') {
-          console.error('ReactLibrary is not defined');
-          document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">React library not loaded.</p></div>';
-          return;
-        }
-        
-        if (typeof ReactDOMLibrary === 'undefined') {
-          console.error('ReactDOMLibrary is not defined');
-          document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">ReactDOM library not loaded.</p></div>';
-          return;
-        }
-        
-        // Extract React and ReactDOM from the global library objects
-        // The bundles return functions that need to be called to get the actual libraries
-        const React = typeof ReactLibrary === 'function' ? ReactLibrary() : ReactLibrary;
-        const ReactDOM = typeof ReactDOMLibrary === 'function' ? ReactDOMLibrary() : ReactDOMLibrary;
-        
-        console.log('React version:', React.version);
-        console.log('ReactDOM available:', !!ReactDOM);
+        // Check if React is available globally (it should be bundled)
+        console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
+        console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
         
         // Check if we have the component
+        console.log('Demo: Bundle exports:', Object.keys(typeof DemoComponent !== 'undefined' ? DemoComponent : {}));
+        
         if (typeof DemoComponent === 'undefined') {
-          console.error('DemoComponent is not defined');
-          document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component not loaded.</p></div>';
+          console.error('Demo: DemoComponent is not defined');
+          showError('DemoComponent is not defined. Check browser console for details.');
           return;
         }
-        
-        console.log('DemoComponent found:', typeof DemoComponent, DemoComponent);
         
         // Get the component
         const Component = DemoComponent.default || DemoComponent;
         
         if (!Component) {
-          console.error('Component not found in DemoComponent');
-          document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component not found.</p></div>';
+          console.error('Demo: Component not found in DemoComponent');
+          showError('Component not found in DemoComponent. Check browser console for details.');
           return;
         }
         
-        console.log('Component resolved:', typeof Component);
+        console.log('Demo: Found DemoComponent:', typeof Component);
         
         // Render the component
         const rootElement = document.getElementById('root');
         if (!rootElement) {
-          console.error('Root element not found');
+          console.error('Demo: Root element not found');
+          showError('Root element not found. Check browser console for details.');
           return;
         }
         
@@ -93,29 +149,34 @@
         
         // Try to render with React
         try {
-          if (ReactDOM.createRoot) {
-            console.log('Using createRoot');
-            const root = ReactDOM.createRoot(rootElement);
-            const element = React.createElement(Component);
-            root.render(element);
-            console.log('Component rendered successfully with createRoot');
-          } else if (ReactDOM.render) {
-            console.log('Using legacy render');
-            const element = React.createElement(Component);
-            ReactDOM.render(element, rootElement);
-            console.log('Component rendered successfully with legacy render');
+          if (typeof ReactDOM !== 'undefined' && typeof React !== 'undefined') {
+            if (ReactDOM.createRoot) {
+              console.log('Demo: Using createRoot');
+              const root = ReactDOM.createRoot(rootElement);
+              const element = React.createElement(Component);
+              root.render(element);
+              console.log('Demo: Mount succeeded');
+            } else if (ReactDOM.render) {
+              console.log('Demo: Using legacy render');
+              const element = React.createElement(Component);
+              ReactDOM.render(element, rootElement);
+              console.log('Demo: Mount succeeded');
+            } else {
+              throw new Error('No rendering method found');
+            }
           } else {
-            throw new Error('No rendering method found');
+            throw new Error('React or ReactDOM not available');
           }
         } catch (renderError) {
-          console.error('Error during React rendering:', renderError);
-          console.error('Render error stack:', renderError.stack);
+          console.error('Demo: Mount failed:', renderError);
+          console.error('Demo: Render error stack:', renderError.stack);
+          showError('Mount failed: ' + renderError.message);
           throw renderError;
         }
       } catch (error) {
-        console.error('Error in main rendering process:', error);
-        console.error('Error stack:', error.stack);
-        document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p></div>';
+        console.error('Demo: Error in main rendering process:', error);
+        console.error('Demo: Error stack:', error.stack);
+        showError('Rendering process failed: ' + error.message);
       }
     });
   </script>
