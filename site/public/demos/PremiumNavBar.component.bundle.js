@@ -38,6 +38,14 @@ var DemoComponent = (() => {
   __export(demo_exports, {
     default: () => demo_default
   });
+
+  // scripts/react-shim.js
+  var React = globalThis.ReactLibrary ? typeof globalThis.ReactLibrary === "function" ? globalThis.ReactLibrary() : globalThis.ReactLibrary : globalThis.React;
+  var ReactDOM = globalThis.ReactDOMLibrary ? typeof globalThis.ReactDOMLibrary === "function" ? globalThis.ReactDOMLibrary() : globalThis.ReactDOMLibrary : globalThis.ReactDOM;
+  globalThis.React = React;
+  globalThis.ReactDOM = ReactDOM;
+
+  // components/PremiumNavBar/demo.tsx
   var import_react4 = __toESM(__require("react"));
 
   // components/PremiumNavBar/index.tsx

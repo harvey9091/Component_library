@@ -89,7 +89,11 @@ async function buildDemos() {
               'process.env.NODE_ENV': '"production"'
             },
             // Externalize React and ReactDOM so they use the global versions
-            external: ['react', 'react-dom']
+            external: ['react', 'react-dom'],
+            // Inject React and ReactDOM as globals
+            inject: [
+              path.join(__dirname, 'react-shim.js')
+            ]
           });
           
           // Move the bundled files to the final location
