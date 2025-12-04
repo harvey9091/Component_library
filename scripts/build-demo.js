@@ -44,8 +44,7 @@ async function buildDemos() {
             fs.unlinkSync(bundlePath);
           }
           
-          // Bundle the component using esbuild with specific handling for dependencies
-          // We'll bundle everything together to avoid dynamic require issues
+          // Bundle the component using esbuild with React and ReactDOM as external dependencies
           const result = await build({
             entryPoints: [entryPoint],
             bundle: true,
@@ -64,9 +63,8 @@ async function buildDemos() {
             define: {
               'process.env.NODE_ENV': '"production"'
             },
-            // Bundle all dependencies including React and ReactDOM
-            // This avoids dynamic require issues
-            packages: 'bundle'
+            // Externalize React and ReactDOM so they're not bundled
+            external: ['react', 'react-dom']
           });
           
           // Create the HTML file with the bundled component
