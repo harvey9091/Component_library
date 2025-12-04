@@ -1,13 +1,17 @@
 [
   {
     "id": "PremiumNavBar",
-    "name": "PremiumNavBar",
+    "title": "PremiumNavBar",
     "description": "A premium navigation bar with glass morphism effect and animated active tab indicator",
     "tags": [
       "navigation",
       "ui",
       "glassmorphism",
       "animation"
-    ]
+    ],
+    "codePath": "/components/PremiumNavBar/index.tsx",
+    "demoPath": "/demos/PremiumNavBar.html",
+    "updatedAt": "2025-12-04T07:49:07.277Z",
+    "name": "PremiumNavBar"
   }
 ]

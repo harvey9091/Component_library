@@ -8,5 +8,9 @@
     "prepare": "npm run generate-catalog && npm run build-demo",
     "site:dev": "cd site && npm run dev",
     "site:build": "cd site && npm run build"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.1",
+    "lucide-react": "^0.555.0"
   }
 }
