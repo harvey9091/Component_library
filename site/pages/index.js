@@ -10,6 +10,11 @@ export default function Home() {
       .catch(error => console.error('Error loading catalog:', error));
   }, []);
 
+  const getEmbedUrl = (demoPath) => {
+    const normalized = demoPath.replace(/^\/+/, '');
+    return `https://raw.githack.com/harvey9091/Component_library/main/site/public/${normalized}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-12">
       <div className="max-w-4xl mx-auto px-4">
@@ -40,7 +45,7 @@ export default function Home() {
                 <div className="flex gap-2">
                   {component.demoPath && (
                     <a 
-                      href={component.demoPath} 
+                      href={getEmbedUrl(component.demoPath)} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
