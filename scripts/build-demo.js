@@ -79,59 +79,77 @@ async function buildDemos() {
   </div>
   
   <!-- Load React and dependencies -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
   
   <script>
-    // Make dependencies available globally
-    window.React = React;
-    window.ReactDOM = ReactDOM;
+    // Make dependencies available globally with fallbacks
+    window.React = window.React || React;
+    window.ReactDOM = window.ReactDOM || ReactDOM;
     
-    // Handle lucide-react differently - it might be exported as 'lucide' or have icons directly
-    window.LucideIcons = lucide || window.lucide || {};
+    // Handle lucide-react - try multiple possible global names
+    window.LucideIcons = window.lucide || window.LucideIcons || lucide || {};
     
-    // Create a more robust require polyfill
+    // Create a robust require polyfill that handles all possible cases
     function require(moduleName) {
       switch (moduleName) {
         case 'react':
-          return React;
+          return window.React;
         case 'react-dom':
-          return ReactDOM;
+          return window.ReactDOM;
         case 'lucide-react':
           return window.LucideIcons;
         default:
-          throw new Error('Module not found: ' + moduleName);
+          console.warn('Module not found: ' + moduleName);
+          return {};
       }
     }
     
     // Attach to window for global access
     window.require = require;
     
-    // Also provide module.exports for CommonJS compatibility
-    window.module = { exports: {} };
-    window.exports = window.module.exports;
+    // Provide module.exports for CommonJS compatibility
+    window.module = window.module || { exports: {} };
+    window.exports = window.exports || window.module.exports;
   </script>
   
   <!-- Load the bundled component -->
   <script src="./${folder}.bundle.js"></script>
   
   <script>
-    // Render the component
+    // Render the component with extensive error handling
     try {
-      // Get the component from various possible locations
-      const Component = window.DemoComponent?.default || 
-                       window.DemoComponent || 
-                       window.module?.exports?.default || 
-                       window.module?.exports ||
-                       DemoComponent;
+      // Try multiple ways to access the component
+      let Component = null;
+      
+      // Method 1: Global namespace
+      if (window.DemoComponent) {
+        Component = window.DemoComponent.default || window.DemoComponent;
+      }
+      
+      // Method 2: Module exports
+      if (!Component && window.module && window.module.exports) {
+        Component = window.module.exports.default || window.module.exports;
+      }
+      
+      // Method 3: Direct global
+      if (!Component) {
+        Component = DemoComponent;
+      }
+      
+      // Method 4: Check if DemoComponent itself is the component
+      if (!Component && typeof window.DemoComponent === 'function') {
+        Component = window.DemoComponent;
+      }
       
       if (Component) {
         const rootElement = document.getElementById('root');
         const root = ReactDOM.createRoot(rootElement);
         root.render(React.createElement(Component));
       } else {
-        document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component loaded but not rendered.</p></div>';
+        console.error('Component not found in any expected location');
+        document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component loaded but not found.</p><p class="text-xs mt-2 text-gray-500">Check console for details</p></div>';
       }
     } catch (error) {
       console.error('Error rendering component:', error);
