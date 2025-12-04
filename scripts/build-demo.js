@@ -38,6 +38,12 @@ async function buildDemos() {
         try {
           console.log(`Demo: building ${folder}`);
           
+          // Delete any existing bundle file to avoid caching issues
+          const bundlePath = path.join(demosOutputDir, `${folder}.bundle.js`);
+          if (fs.existsSync(bundlePath)) {
+            fs.unlinkSync(bundlePath);
+          }
+          
           // Bundle the component using esbuild with specific handling for dependencies
           // We'll bundle everything together to avoid dynamic require issues
           const result = await build({
@@ -45,7 +51,7 @@ async function buildDemos() {
             bundle: true,
             format: 'iife',
             globalName: 'DemoComponent',
-            outfile: path.join(demosOutputDir, `${folder}.bundle.js`),
+            outfile: bundlePath,
             jsx: 'transform',
             loader: {
               '.tsx': 'tsx',
@@ -167,7 +173,7 @@ async function buildDemos() {
   <script>
     console.log('Demo: loading bundle: ./${folder}.bundle.js');
   </script>
-  <script src="./${folder}.bundle.js"></script>
+  <script src="./${folder}.bundle.js?v=${Date.now()}"></script>
   <script>
     console.log('Demo: bundle loaded');
   </script>
