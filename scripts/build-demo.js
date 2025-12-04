@@ -170,8 +170,8 @@ async function buildDemos() {
   </script>
   
   <!-- Load React and ReactDOM from CDN as fallback -->
-  <script src="https://unpkg.com/react@19.2.1/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@19.2.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/react@19.2.1/umd/react.development.js" onload="window.reactLoaded = true;"></script>
+  <script src="https://unpkg.com/react-dom@19.2.1/umd/react-dom.development.js" onload="window.reactDOMLoaded = true;"></script>
   
   <!-- Load the bundled component -->
   <script>
@@ -225,8 +225,12 @@ async function buildDemos() {
         
         // Try to render with React
         try {
-          // Wait a bit to ensure React and ReactDOM are fully loaded
-          setTimeout(function() {
+          // Wait for React and ReactDOM to be fully loaded
+          function renderWhenReady(attempts = 0) {
+            if (attempts > 50) {
+              throw new Error('React or ReactDOM failed to load after 5 seconds');
+            }
+            
             if (typeof ReactDOM !== 'undefined' && typeof React !== 'undefined') {
               if (ReactDOM.createRoot) {
                 console.log('Demo: Using createRoot');
@@ -243,9 +247,12 @@ async function buildDemos() {
                 throw new Error('No rendering method found');
               }
             } else {
-              throw new Error('React or ReactDOM not available');
+              // Wait 100ms and try again
+              setTimeout(() => renderWhenReady(attempts + 1), 100);
             }
-          }, 100);
+          }
+          
+          renderWhenReady();
         } catch (renderError) {
           console.error('Demo: Mount failed:', renderError);
           console.error('Demo: Render error stack:', renderError.stack);
