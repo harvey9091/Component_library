@@ -17,117 +17,40 @@
     </div>
   </div>
   
-  <!-- Load React and dependencies -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
-  
   <script>
-    // Debug logging
-    console.log('=== Dependency Loading Debug Info ===');
-    console.log('Window object keys:', Object.keys(window).filter(key => ['React', 'ReactDOM', 'lucide', 'LucideIcons'].includes(key) || key.toLowerCase().includes('react')));
-    
-    // Make dependencies available globally with extensive debugging
-    window.React = window.React || React;
-    window.ReactDOM = window.ReactDOM || ReactDOM;
-    
-    // Handle lucide-react - try multiple possible global names with debugging
-    console.log('Checking for lucide-react exports...');
-    console.log('window.lucide:', typeof window.lucide, window.lucide ? Object.keys(window.lucide).slice(0, 5) : 'undefined');
-    console.log('lucide:', typeof lucide, lucide ? Object.keys(lucide).slice(0, 5) : 'undefined');
-    
-    window.LucideIcons = window.lucide || window.LucideIcons || lucide || {};
-    console.log('LucideIcons set to:', typeof window.LucideIcons, window.LucideIcons ? Object.keys(window.LucideIcons).slice(0, 5) : 'undefined');
-    
-    // Create a robust require polyfill that handles all possible cases with debugging
-    function require(moduleName) {
-      console.log('Require called with:', moduleName);
-      switch (moduleName) {
-        case 'react':
-          console.log('Returning React:', typeof window.React);
-          return window.React;
-        case 'react-dom':
-          console.log('Returning ReactDOM:', typeof window.ReactDOM);
-          return window.ReactDOM;
-        case 'lucide-react':
-          console.log('Returning LucideIcons:', typeof window.LucideIcons);
-          return window.LucideIcons;
-        default:
-          console.warn('Module not found: ' + moduleName);
-          return {};
-      }
-    }
-    
-    // Attach to window for global access
-    window.require = require;
-    
-    // Provide module.exports for CommonJS compatibility
-    window.module = window.module || { exports: {} };
-    window.exports = window.exports || window.module.exports;
-    
-    console.log('=== End Dependency Loading Debug Info ===');
+    // Simple error handling
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('Global error:', message, 'at', source, ':', lineno, ':', colno);
+      document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>' + message + '</p><p class="text-xs mt-2">Check console for details</p></div>';
+    };
   </script>
   
-  <!-- Load the bundled component -->
+  <!-- Load the bundled component (now includes all dependencies) -->
   <script src="./PremiumNavBar.bundle.js"></script>
   
   <script>
-    // Render the component with extensive error handling and debugging
-    console.log('=== Component Detection Debug Info ===');
-    console.log('Window object keys:', Object.keys(window).filter(key => ['DemoComponent', 'module', 'exports'].includes(key)));
-    console.log('DemoComponent:', typeof window.DemoComponent, window.DemoComponent);
-    console.log('module:', typeof window.module, window.module);
-    console.log('module.exports:', typeof window.module?.exports, window.module?.exports);
-    
+    // Render the component
     try {
-      // Try multiple ways to access the component
-      let Component = null;
-      
-      // Method 1: Global namespace
-      if (window.DemoComponent) {
-        console.log('Found DemoComponent in global namespace');
-        Component = window.DemoComponent.default || window.DemoComponent;
-        console.log('Component from DemoComponent:', typeof Component, Component);
-      }
-      
-      // Method 2: Module exports
-      if (!Component && window.module && window.module.exports) {
-        console.log('Found component in module.exports');
-        Component = window.module.exports.default || window.module.exports;
-        console.log('Component from module.exports:', typeof Component, Component);
-      }
-      
-      // Method 3: Direct global
-      if (!Component) {
-        console.log('Trying direct global access');
-        Component = DemoComponent;
-        console.log('Component from direct access:', typeof Component, Component);
-      }
-      
-      // Method 4: Check if DemoComponent itself is the component
-      if (!Component && typeof window.DemoComponent === 'function') {
-        console.log('Using DemoComponent directly as function');
-        Component = window.DemoComponent;
-        console.log('Component from DemoComponent function:', typeof Component, Component);
-      }
-      
-      console.log('Final Component:', typeof Component, Component);
+      // Get the component from the global namespace
+      const Component = window.DemoComponent?.default || window.DemoComponent;
       
       if (Component) {
+        // Create root element and render
         const rootElement = document.getElementById('root');
-        console.log('Rendering component to root element');
-        const root = ReactDOM.createRoot(rootElement);
-        root.render(React.createElement(Component));
+        // Use older ReactDOM.render for better compatibility
+        if (window.ReactDOM.createRoot) {
+          const root = ReactDOM.createRoot(rootElement);
+          root.render(React.createElement(Component));
+        } else {
+          ReactDOM.render(React.createElement(Component), rootElement);
+        }
       } else {
-        console.error('Component not found in any expected location');
-        document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component loaded but not found.</p><p class="text-xs mt-2 text-gray-500">Check console for details</p></div>';
+        document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component not found.</p></div>';
       }
     } catch (error) {
       console.error('Error rendering component:', error);
       document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p><p class="text-xs mt-2">Check console for details</p></div>';
     }
-    
-    console.log('=== End Component Detection Debug Info ===');
   </script>
 </body>
 </html>
