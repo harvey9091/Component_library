@@ -225,24 +225,27 @@ async function buildDemos() {
         
         // Try to render with React
         try {
-          if (typeof ReactDOM !== 'undefined' && typeof React !== 'undefined') {
-            if (ReactDOM.createRoot) {
-              console.log('Demo: Using createRoot');
-              const root = ReactDOM.createRoot(rootElement);
-              const element = React.createElement(Component);
-              root.render(element);
-              console.log('Demo: Mount succeeded');
-            } else if (ReactDOM.render) {
-              console.log('Demo: Using legacy render');
-              const element = React.createElement(Component);
-              ReactDOM.render(element, rootElement);
-              console.log('Demo: Mount succeeded');
+          // Wait a bit to ensure React and ReactDOM are fully loaded
+          setTimeout(function() {
+            if (typeof ReactDOM !== 'undefined' && typeof React !== 'undefined') {
+              if (ReactDOM.createRoot) {
+                console.log('Demo: Using createRoot');
+                const root = ReactDOM.createRoot(rootElement);
+                const element = React.createElement(Component);
+                root.render(element);
+                console.log('Demo: Mount succeeded');
+              } else if (ReactDOM.render) {
+                console.log('Demo: Using legacy render');
+                const element = React.createElement(Component);
+                ReactDOM.render(element, rootElement);
+                console.log('Demo: Mount succeeded');
+              } else {
+                throw new Error('No rendering method found');
+              }
             } else {
-              throw new Error('No rendering method found');
+              throw new Error('React or ReactDOM not available');
             }
-          } else {
-            throw new Error('React or ReactDOM not available');
-          }
+          }, 100);
         } catch (renderError) {
           console.error('Demo: Mount failed:', renderError);
           console.error('Demo: Render error stack:', renderError.stack);
