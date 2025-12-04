@@ -80,6 +80,10 @@ async function buildDemos() {
   </div>
   
   <script>
+    // Prevent any external React from interfering
+    window.React = undefined;
+    window.ReactDOM = undefined;
+    
     // Simple error handling
     window.onerror = function(message, source, lineno, colno, error) {
       console.error('Global error:', message, 'at', source, ':', lineno, ':', colno);
