@@ -98,12 +98,16 @@ async function buildDemos() {
     // Render the component
     document.addEventListener('DOMContentLoaded', function() {
       try {
+        console.log('Starting component rendering process...');
+        
         // Check if we have the component
         if (typeof DemoComponent === 'undefined') {
           console.error('DemoComponent is not defined');
           document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component not loaded.</p></div>';
           return;
         }
+        
+        console.log('DemoComponent found:', typeof DemoComponent, Object.keys(DemoComponent));
         
         // Get the component
         const Component = DemoComponent.default || DemoComponent;
@@ -114,6 +118,8 @@ async function buildDemos() {
           return;
         }
         
+        console.log('Component resolved:', typeof Component);
+        
         // Render the component
         const rootElement = document.getElementById('root');
         if (!rootElement) {
@@ -121,20 +127,34 @@ async function buildDemos() {
           return;
         }
         
+        console.log('Root element found');
+        console.log('ReactDOM available:', typeof ReactDOM);
+        console.log('React available:', typeof React);
+        
+        // Check if React and ReactDOM are properly loaded
+        if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
+          console.error('React or ReactDOM not available');
+          document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">React libraries not loaded.</p></div>';
+          return;
+        }
+        
         // Use the bundled React and ReactDOM
-        if (typeof ReactDOM !== 'undefined' && typeof ReactDOM.createRoot === 'function') {
-          // React 18+ rendering
+        if (typeof ReactDOM.createRoot === 'function') {
+          console.log('Using React 18+ rendering');
           const root = ReactDOM.createRoot(rootElement);
           root.render(React.createElement(Component));
-        } else if (typeof ReactDOM !== 'undefined' && typeof ReactDOM.render === 'function') {
-          // Older React rendering
+        } else if (typeof ReactDOM.render === 'function') {
+          console.log('Using legacy React rendering');
           ReactDOM.render(React.createElement(Component), rootElement);
         } else {
+          console.error('No React rendering method available');
+          console.log('Available ReactDOM methods:', Object.keys(ReactDOM || {}));
           // Fallback - show static content
           rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component loaded successfully!</p></div>';
         }
       } catch (error) {
         console.error('Error rendering component:', error);
+        console.error('Error stack:', error.stack);
         document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p></div>';
       }
     });
