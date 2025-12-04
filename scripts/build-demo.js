@@ -36,13 +36,46 @@ async function buildDemos() {
         const entryPoint = fs.existsSync(demoPath) ? demoPath : indexPath;
         
         try {
-          // Bundle the component using esbuild with specific handling for dependencies
-          const result = await build({
+          // Create a temporary directory for this component's bundles
+          const tempDir = path.join(demosOutputDir, `${folder}_temp`);
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // First, bundle React and ReactDOM separately
+          const reactBundleResult = await build({
+            entryPoints: [require.resolve('react')],
+            bundle: true,
+            format: 'iife',
+            globalName: 'ReactLibrary',
+            outfile: path.join(tempDir, 'react.bundle.js'),
+            sourcemap: false,
+            minify: false,
+            define: {
+              'process.env.NODE_ENV': '"production"'
+            }
+          });
+          
+          const reactDOMBundleResult = await build({
+            entryPoints: [require.resolve('react-dom')],
+            bundle: true,
+            format: 'iife',
+            globalName: 'ReactDOMLibrary',
+            outfile: path.join(tempDir, 'react-dom.bundle.js'),
+            sourcemap: false,
+            minify: false,
+            define: {
+              'process.env.NODE_ENV': '"production"'
+            }
+          });
+          
+          // Then bundle the component using esbuild with specific handling for dependencies
+          const componentBundleResult = await build({
             entryPoints: [entryPoint],
             bundle: true,
             format: 'iife',
             globalName: 'DemoComponent',
-            outfile: path.join(demosOutputDir, `${folder}.bundle.js`),
+            outfile: path.join(tempDir, 'component.bundle.js'),
             jsx: 'transform',
             loader: {
               '.tsx': 'tsx',
@@ -55,9 +88,17 @@ async function buildDemos() {
             define: {
               'process.env.NODE_ENV': '"production"'
             },
-            // Bundle all dependencies including React and ReactDOM
-            packages: 'bundle'
+            // Externalize React and ReactDOM so they use the global versions
+            external: ['react', 'react-dom']
           });
+          
+          // Move the bundled files to the final location
+          fs.copyFileSync(path.join(tempDir, 'react.bundle.js'), path.join(demosOutputDir, `${folder}.react.bundle.js`));
+          fs.copyFileSync(path.join(tempDir, 'react-dom.bundle.js'), path.join(demosOutputDir, `${folder}.react-dom.bundle.js`));
+          fs.copyFileSync(path.join(tempDir, 'component.bundle.js'), path.join(demosOutputDir, `${folder}.component.bundle.js`));
+          
+          // Clean up the temporary directory
+          fs.rmSync(tempDir, { recursive: true, force: true });
           
           // Create the HTML file with the bundled component
           const htmlContent = `<!DOCTYPE html>
@@ -87,14 +128,40 @@ async function buildDemos() {
     };
   </script>
   
-  <!-- Load the bundled component (includes all dependencies: React, ReactDOM, lucide-react) -->
-  <script src="./${folder}.bundle.js"></script>
+  <!-- Load React library -->
+  <script src="./${folder}.react.bundle.js"></script>
+  
+  <!-- Load ReactDOM library -->
+  <script src="./${folder}.react-dom.bundle.js"></script>
+  
+  <!-- Load the component bundle -->
+  <script src="./${folder}.component.bundle.js"></script>
   
   <script>
     // Render the component
     document.addEventListener('DOMContentLoaded', function() {
       try {
         console.log('Starting component rendering process...');
+        
+        // Check if we have the React libraries
+        if (typeof ReactLibrary === 'undefined') {
+          console.error('ReactLibrary is not defined');
+          document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">React library not loaded.</p></div>';
+          return;
+        }
+        
+        if (typeof ReactDOMLibrary === 'undefined') {
+          console.error('ReactDOMLibrary is not defined');
+          document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">ReactDOM library not loaded.</p></div>';
+          return;
+        }
+        
+        // Extract React and ReactDOM from the global library objects
+        const React = ReactLibrary;
+        const ReactDOM = ReactDOMLibrary;
+        
+        console.log('React version:', React.version);
+        console.log('ReactDOM available:', !!ReactDOM);
         
         // Check if we have the component
         if (typeof DemoComponent === 'undefined') {
@@ -116,93 +183,37 @@ async function buildDemos() {
         
         console.log('Component resolved:', typeof Component);
         
-        // Immediately invoke the rendering
-        (function() {
-          const rootElement = document.getElementById('root');
-          if (!rootElement) {
-            console.error('Root element not found');
-            return;
+        // Render the component
+        const rootElement = document.getElementById('root');
+        if (!rootElement) {
+          console.error('Root element not found');
+          return;
+        }
+        
+        // Clear the root element
+        rootElement.innerHTML = '';
+        
+        // Try to render with React
+        try {
+          if (ReactDOM.createRoot) {
+            console.log('Using createRoot');
+            const root = ReactDOM.createRoot(rootElement);
+            const element = React.createElement(Component);
+            root.render(element);
+            console.log('Component rendered successfully with createRoot');
+          } else if (ReactDOM.render) {
+            console.log('Using legacy render');
+            const element = React.createElement(Component);
+            ReactDOM.render(element, rootElement);
+            console.log('Component rendered successfully with legacy render');
+          } else {
+            throw new Error('No rendering method found');
           }
-          
-          // Clear the root element
-          rootElement.innerHTML = '';
-          
-          // Try to render with the bundled React
-          try {
-            console.log('Attempting to render with bundled React...');
-            
-            // Check if React is available in the bundle
-            // We need to access the React and ReactDOM that are bundled with the component
-            const bundledExports = DemoComponent;
-            console.log('Bundle exports keys:', Object.keys(bundledExports));
-            
-            // Look for React and ReactDOM in various possible locations
-            let ReactLib = null;
-            let ReactDOMLib = null;
-            
-            // Check direct properties
-            if (bundledExports.React) {
-              ReactLib = bundledExports.React;
-            }
-            if (bundledExports.ReactDOM) {
-              ReactDOMLib = bundledExports.ReactDOM;
-            }
-            
-            // If not found directly, check if they're nested
-            if (!ReactLib) {
-              for (const key in bundledExports) {
-                if (bundledExports[key] && typeof bundledExports[key] === 'object' && bundledExports[key].createElement) {
-                  ReactLib = bundledExports[key];
-                  break;
-                }
-              }
-            }
-            
-            if (!ReactDOMLib) {
-              for (const key in bundledExports) {
-                if (bundledExports[key] && typeof bundledExports[key] === 'object' && (bundledExports[key].render || bundledExports[key].createRoot)) {
-                  ReactDOMLib = bundledExports[key];
-                  break;
-                }
-              }
-            }
-            
-            console.log('React found:', !!ReactLib);
-            console.log('ReactDOM found:', !!ReactDOMLib);
-            
-            if (ReactLib && ReactDOMLib) {
-              console.log('React version:', ReactLib.version || 'unknown');
-              
-              // Try to create root and render
-              try {
-                if (ReactDOMLib.createRoot) {
-                  console.log('Using createRoot');
-                  const root = ReactDOMLib.createRoot(rootElement);
-                  const element = ReactLib.createElement(Component);
-                  root.render(element);
-                  console.log('Component rendered successfully with createRoot');
-                } else if (ReactDOMLib.render) {
-                  console.log('Using legacy render');
-                  const element = ReactLib.createElement(Component);
-                  ReactDOMLib.render(element, rootElement);
-                  console.log('Component rendered successfully with legacy render');
-                } else {
-                  throw new Error('No rendering method found');
-                }
-              } catch (renderError) {
-                console.error('Error during React rendering:', renderError);
-                console.error('Render error stack:', renderError.stack);
-                throw renderError;
-              }
-            } else {
-              throw new Error('React or ReactDOM not found in bundle');
-            }
-          } catch (error) {
-            console.error('Error rendering component:', error);
-            console.error('Error stack:', error.stack);
-            rootElement.innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p><p class="text-xs mt-2">Check console for details</p></div>';
-          }
-        })();
+        } catch (renderError) {
+          console.error('Error during React rendering:', renderError);
+          console.error('Render error stack:', renderError.stack);
+          throw renderError;
+        }
       } catch (error) {
         console.error('Error in main rendering process:', error);
         console.error('Error stack:', error.stack);
