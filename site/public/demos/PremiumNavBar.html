@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PremiumNavBar Demo</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide-react@latest"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-type="module">
+    import React, { useState } from 'https://esm.sh/react';
+    import ReactDOM from 'https://esm.sh/react-dom/client';
+    import * as LucideIcons from 'https://esm.sh/lucide-react';
+    
+    // Make Lucide icons available globally
+    window.LucideIcons = LucideIcons;
+    
+    // Import the demo component
+    const DemoComponent = (() => {
+      const exports = {};
+      const require = (module) => {
+        if (module === 'react') return React;
+        if (module === 'lucide-react') return LucideIcons;
+        return {};
+      };
+      
+      // Component code will be injected here
+      import React, { useState } from 'react';
+import PremiumNavBar from './index';
+
+const PremiumNavBarDemo = () => {
+  const [activeTab, setActiveTab] = useState('home');
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
+      <h1 className="text-2xl font-bold text-white mb-8">Premium Navigation Bar Demo</h1>
+      <div className="w-full max-w-md">
+        <PremiumNavBar 
+          activeTabId={activeTab} 
+          onTabChange={setActiveTab} 
+        />
+      </div>
+      <div className="mt-8 text-white">
+        <p>Active Tab: {activeTab}</p>
+      </div>
+    </div>
+  );
+};
+
+export default PremiumNavBarDemo;
+      
+      return exports.default || exports;
+    })();
+    
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(DemoComponent));
+  </script>
+</body>
+</html>

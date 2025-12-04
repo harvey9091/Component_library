@@ -16,36 +16,56 @@ function generateCatalog() {
       
       if (stat.isDirectory()) {
         const metaPath = path.join(componentPath, 'meta.json');
-        let metaData = {};
+        const indexPath = path.join(componentPath, 'index.tsx');
+        const demoPath = path.join(componentPath, 'demo.tsx');
         
-        // Check if meta.json exists, if not create a minimal one
+        let metaData = {
+          id: folder,
+          title: folder,
+          description: '',
+          tags: [],
+          codePath: `/components/${folder}/index.tsx`,
+          demoPath: `/demos/${folder}.html`,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Read meta.json if it exists
         if (fs.existsSync(metaPath)) {
           try {
-            metaData = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+            const metaContent = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+            metaData = {
+              ...metaData,
+              ...metaContent,
+              id: folder,
+              title: metaContent.name || metaContent.title || folder,
+              codePath: `/components/${folder}/index.tsx`,
+              demoPath: `/demos/${folder}.html`
+            };
           } catch (err) {
             console.warn(`Error reading meta.json for ${folder}:`, err.message);
-            metaData = { name: folder };
           }
-        } else {
-          // Auto-generate minimal meta data
-          metaData = { name: folder };
-          fs.writeFileSync(metaPath, JSON.stringify(metaData, null, 2));
         }
         
-        catalog.push({
-          id: folder,
-          ...metaData
-        });
+        // Get file stats for updated time
+        if (fs.existsSync(indexPath)) {
+          const fileStat = fs.statSync(indexPath);
+          metaData.updatedAt = fileStat.mtime.toISOString();
+        }
+        
+        catalog.push(metaData);
       }
     });
   }
   
-  // Write catalog to both locations
+  // Sort catalog by id
+  catalog.sort((a, b) => a.id.localeCompare(b.id));
+  
+  // Write catalog to site public directory
   const catalogJson = JSON.stringify(catalog, null, 2);
-  fs.writeFileSync(path.join(__dirname, '..', 'catalog.json'), catalogJson);
   fs.writeFileSync(path.join(__dirname, '..', 'site', 'public', 'catalog.json'), catalogJson);
   
   console.log('Catalog generated successfully!');
+  console.log(`Generated catalog with ${catalog.length} components`);
 }
 
 // Run the function
