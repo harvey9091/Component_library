@@ -16,11 +16,11 @@ function generateCatalog() {
       
       if (stat.isDirectory()) {
         const indexPath = path.join(componentPath, 'index.tsx');
+        const demoPath = path.join(componentPath, 'demo.tsx');
         
-        // Only process folders that contain index.tsx
-        if (fs.existsSync(indexPath)) {
+        // Only process folders that contain index.tsx or demo.tsx
+        if (fs.existsSync(indexPath) || fs.existsSync(demoPath)) {
           const metaPath = path.join(componentPath, 'meta.json');
-          const demoPath = path.join(componentPath, 'demo.tsx');
           
           let metaData = {
             id: folder,
@@ -50,7 +50,8 @@ function generateCatalog() {
           }
           
           // Get file stats for updated time
-          const fileStat = fs.statSync(indexPath);
+          const fileToCheck = fs.existsSync(indexPath) ? indexPath : demoPath;
+          const fileStat = fs.statSync(fileToCheck);
           metaData.updatedAt = fileStat.mtime.toISOString();
           
           catalog.push(metaData);
@@ -69,7 +70,17 @@ function generateCatalog() {
   
   console.log('Catalog generated successfully!');
   console.log(`Generated catalog with ${catalog.length} components`);
+  
+  // Exit with non-zero on fatal errors
+  if (catalog.length === 0) {
+    console.log('Warning: No components found');
+  }
 }
 
 // Run the function
-generateCatalog();
+try {
+  generateCatalog();
+} catch (err) {
+  console.error('Fatal error generating catalog:', err.message);
+  process.exit(1);
+}

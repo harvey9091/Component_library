@@ -1,0 +1,43 @@
+name: Auto Build Catalog and Demos
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: true
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        if [ -f package-lock.json ]; then npm ci; fi
+        if [ -d site ] && [ -f site/package-lock.json ]; then cd site && npm ci && cd ..; fi
+        
+    - name: Generate catalog and build demos
+      run: |
+        npm run generate-catalog
+        npm run build-demo
+        
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add site/public/catalog.json site/public/demos/
+        if ! git diff --cached --quiet; then
+          git commit -m "chore: auto-update catalog + demo previews"
+          git push
+        else
+          echo "No changes to commit"
+        fi
