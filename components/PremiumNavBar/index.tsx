@@ -68,8 +68,6 @@ const PremiumNavBar: React.FunctionComponent<PremiumNavBarProps> = ({
               >
                 <div className="relative flex flex-col items-center justify-center transition-all duration-300 ease-out">
                   <Icon
-                    size={26}
-                    strokeWidth={isActive ? 2 : 1.5}
                     className={`
                       relative z-10 transition-colors duration-300
                       ${isActive 
@@ -77,6 +75,9 @@ const PremiumNavBar: React.FunctionComponent<PremiumNavBarProps> = ({
                         : 'text-white/20 group-hover:text-red-400'
                       }
                     `}
+                    width={26}
+                    height={26}
+                    strokeWidth={isActive ? 2 : 1.5}
                   />
                 </div>
               </button>
