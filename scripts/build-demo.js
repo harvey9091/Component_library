@@ -92,56 +92,96 @@ async function buildDemos() {
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   
   <script>
+    // Debug logging
+    console.log('=== React/ReactDOM Loading Debug ===');
+    console.log('React available:', typeof React !== 'undefined');
+    console.log('ReactDOM available:', typeof ReactDOM !== 'undefined');
+    
+    if (typeof React !== 'undefined') {
+      console.log('React version:', React.version);
+    }
+    
+    if (typeof ReactDOM !== 'undefined') {
+      console.log('ReactDOM keys:', Object.keys(ReactDOM).slice(0, 10));
+      console.log('ReactDOM.createRoot available:', typeof ReactDOM.createRoot === 'function');
+      console.log('ReactDOM.render available:', typeof ReactDOM.render === 'function');
+    }
+    
     // Ensure React and ReactDOM are available globally
     window.React = React;
     window.ReactDOM = ReactDOM;
     
-    // Verify React and ReactDOM are loaded
-    console.log('React version:', React.version);
-    console.log('ReactDOM available:', !!ReactDOM);
+    console.log('Window.React assigned:', typeof window.React !== 'undefined');
+    console.log('Window.ReactDOM assigned:', typeof window.ReactDOM !== 'undefined');
     
-    // Check if createRoot is available (React 18+)
-    if (typeof ReactDOM.createRoot === 'function') {
-      console.log('ReactDOM.createRoot is available');
-    } else {
-      console.warn('ReactDOM.createRoot is not available');
+    if (window.ReactDOM) {
+      console.log('Window.ReactDOM.createRoot:', typeof window.ReactDOM.createRoot);
+      console.log('Window.ReactDOM.render:', typeof window.ReactDOM.render);
     }
+    
+    console.log('=== End React/ReactDOM Loading Debug ===');
   </script>
   
   <!-- Load the bundled component -->
   <script src="./${folder}.bundle.js"></script>
   
   <script>
+    // Debug logging for component rendering
+    console.log('=== Component Rendering Debug ===');
+    console.log('Window keys:', Object.keys(window).filter(key => ['React', 'ReactDOM', 'DemoComponent'].includes(key)));
+    console.log('DemoComponent available:', typeof window.DemoComponent !== 'undefined');
+    console.log('DemoComponent keys:', window.DemoComponent ? Object.keys(window.DemoComponent) : 'N/A');
+    
     // Render the component
     try {
+      console.log('Starting component rendering process...');
+      
       // Get the component from the global namespace
       const Component = window.DemoComponent?.default || window.DemoComponent;
+      console.log('Component resolved:', typeof Component, Component ? 'Component found' : 'Component not found');
       
       if (Component) {
         // Create root element and render
         const rootElement = document.getElementById('root');
+        console.log('Root element found:', !!rootElement);
         
         // Check if ReactDOM is available
+        console.log('Checking ReactDOM availability...');
+        console.log('window.ReactDOM:', typeof window.ReactDOM);
+        
         if (!window.ReactDOM) {
           throw new Error('ReactDOM is not available');
         }
         
+        console.log('ReactDOM.createRoot type:', typeof window.ReactDOM.createRoot);
+        console.log('ReactDOM.render type:', typeof window.ReactDOM.render);
+        
         // Use createRoot for React 18+ or fallback to render for older versions
         if (typeof window.ReactDOM.createRoot === 'function') {
+          console.log('Using ReactDOM.createRoot for rendering...');
           const root = window.ReactDOM.createRoot(rootElement);
           root.render(window.React.createElement(Component));
         } else if (typeof window.ReactDOM.render === 'function') {
+          console.log('Using ReactDOM.render for rendering...');
           window.ReactDOM.render(window.React.createElement(Component), rootElement);
         } else {
+          console.error('Neither ReactDOM.createRoot nor ReactDOM.render is available');
+          console.log('Available ReactDOM methods:', Object.keys(window.ReactDOM || {}));
           throw new Error('Neither ReactDOM.createRoot nor ReactDOM.render is available');
         }
+        
+        console.log('Component rendered successfully');
       } else {
+        console.error('Component not found');
         document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component not found.</p></div>';
       }
     } catch (error) {
       console.error('Error rendering component:', error);
+      console.error('Error stack:', error.stack);
       document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p><p class="text-xs mt-2">Check console for details</p></div>';
     }
+    
+    console.log('=== End Component Rendering Debug ===');
   </script>
 </body>
 </html>`;
