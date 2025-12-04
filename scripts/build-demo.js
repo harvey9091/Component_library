@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { build } = require('esbuild');
 
 // Function to build demos for all components
 async function buildDemos() {
@@ -35,7 +36,29 @@ async function buildDemos() {
         const entryPoint = fs.existsSync(demoPath) ? demoPath : indexPath;
         
         try {
-          // Create a simple HTML file that loads the component directly
+          // Bundle the component using esbuild
+          const result = await build({
+            entryPoints: [entryPoint],
+            bundle: true,
+            format: 'iife',
+            globalName: 'DemoComponent',
+            outfile: path.join(demosOutputDir, `${folder}.bundle.js`),
+            external: ['react', 'react-dom', 'lucide-react'],
+            jsx: 'transform',
+            loader: {
+              '.tsx': 'tsx',
+              '.ts': 'ts',
+              '.jsx': 'jsx',
+              '.js': 'js'
+            },
+            sourcemap: false,
+            minify: false,
+            define: {
+              'process.env.NODE_ENV': '"production"'
+            }
+          });
+          
+          // Create the HTML file with the bundled component
           const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,21 +81,47 @@ async function buildDemos() {
   <!-- Load React and dependencies -->
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/lucide-react@latest"></script>
+  <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
   
-  <script type="text/babel" data-type="module">
-    import React from 'https://esm.sh/react';
-    import ReactDOM from 'https://esm.sh/react-dom/client';
-    
+  <script>
     // Make dependencies available globally
     window.React = React;
     window.ReactDOM = ReactDOM;
-    window.LucideIcons = LucideIcons;
+    window.LucideIcons = lucide;
     
-    // Simple component renderer
-    const rootElement = document.getElementById('root');
-    rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component demo loaded successfully!</p></div>';
+    // Polyfill for require to handle external dependencies
+    window.require = function(moduleName) {
+      if (moduleName === 'react') return React;
+      if (moduleName === 'react-dom') return ReactDOM;
+      if (moduleName === 'lucide-react') return lucide;
+      throw new Error('Module not found: ' + moduleName);
+    };
+    
+    // Also provide module.exports for CommonJS compatibility
+    window.module = { exports: {} };
+    window.exports = window.module.exports;
+  </script>
+  
+  <!-- Load the bundled component -->
+  <script src="./${folder}.bundle.js"></script>
+  
+  <script>
+    // Render the component
+    try {
+      // Get the component from the global namespace or module.exports
+      const Component = window.DemoComponent.default || window.DemoComponent || window.module.exports.default || window.module.exports;
+      
+      if (Component) {
+        const rootElement = document.getElementById('root');
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(React.createElement(Component));
+      } else {
+        document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component loaded but not rendered.</p></div>';
+      }
+    } catch (error) {
+      console.error('Error rendering component:', error);
+      document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p></div>';
+    }
   </script>
 </body>
 </html>`;
