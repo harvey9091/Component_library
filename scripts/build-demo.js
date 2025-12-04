@@ -188,30 +188,6 @@ async function buildDemos() {
       try {
         console.log('Demo: Starting component rendering process...');
         
-        // Check if React is available globally
-        console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
-        console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
-        
-        // Check if we have the component
-        console.log('Demo: Bundle exports:', Object.keys(typeof DemoComponent !== 'undefined' ? DemoComponent : {}));
-        
-        if (typeof DemoComponent === 'undefined') {
-          console.error('Demo: DemoComponent is not defined');
-          showError('DemoComponent is not defined. Check browser console for details.');
-          return;
-        }
-        
-        // Get the component
-        const Component = DemoComponent.default || DemoComponent;
-        
-        if (!Component) {
-          console.error('Demo: Component not found in DemoComponent');
-          showError('Component not found in DemoComponent. Check browser console for details.');
-          return;
-        }
-        
-        console.log('Demo: Found DemoComponent:', typeof Component);
-        
         // Render the component
         const rootElement = document.getElementById('root');
         if (!rootElement) {
@@ -228,8 +204,35 @@ async function buildDemos() {
           // Wait for React and ReactDOM to be fully loaded
           function renderWhenReady(attempts = 0) {
             if (attempts > 50) {
-              throw new Error('React or ReactDOM failed to load after 5 seconds');
+              console.error('Demo: React or ReactDOM failed to load after 5 seconds');
+              showError('React or ReactDOM failed to load after 5 seconds');
+              return;
             }
+            
+            // Check if React and ReactDOM are available
+            console.log('Demo: Checking React availability - Attempt ' + (attempts + 1));
+            console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
+            console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
+            
+            // Check if we have the component
+            console.log('Demo: Bundle exports:', Object.keys(typeof DemoComponent !== 'undefined' ? DemoComponent : {}));
+            
+            if (typeof DemoComponent === 'undefined') {
+              console.error('Demo: DemoComponent is not defined');
+              showError('DemoComponent is not defined. Check browser console for details.');
+              return;
+            }
+            
+            // Get the component
+            const Component = DemoComponent.default || DemoComponent;
+            
+            if (!Component) {
+              console.error('Demo: Component not found in DemoComponent');
+              showError('Component not found in DemoComponent. Check browser console for details.');
+              return;
+            }
+            
+            console.log('Demo: Found DemoComponent:', typeof Component);
             
             if (typeof ReactDOM !== 'undefined' && typeof React !== 'undefined') {
               if (ReactDOM.createRoot) {
