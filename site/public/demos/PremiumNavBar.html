@@ -10,35 +10,31 @@
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <div id="root">
+    <div class="p-4 text-center">
+      <h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2>
+      <p class="text-gray-600">Loading component...</p>
+    </div>
+  </div>
+  
+  <!-- Load React and dependencies -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/lucide-react@latest"></script>
-  <script>
-    // Make React and ReactDOM available globally for the bundled code
+  
+  <script type="text/babel" data-type="module">
+    import React from 'https://esm.sh/react';
+    import ReactDOM from 'https://esm.sh/react-dom/client';
+    
+    // Make dependencies available globally
     window.React = React;
     window.ReactDOM = ReactDOM;
     window.LucideIcons = LucideIcons;
-  </script>
-  <script>
-    var DemoComponent=(()=>{var p=Object.create;var d=Object.defineProperty;var h=Object.getOwnPropertyDescriptor;var g=Object.getOwnPropertyNames;var w=Object.getPrototypeOf,N=Object.prototype.hasOwnProperty;var m=(e=>typeof require<"u"?require:typeof Proxy<"u"?new Proxy(e,{get:(i,r)=>(typeof require<"u"?require:i)[r]}):e)(function(e){if(typeof require<"u")return require.apply(this,arguments);throw Error('Dynamic require of "'+e+'" is not supported')});var y=(e,i)=>{for(var r in i)d(e,r,{get:i[r],enumerable:!0})},c=(e,i,r,s)=>{if(i&&typeof i=="object"||typeof i=="function")for(let n of g(i))!N.call(e,n)&&n!==r&&d(e,n,{get:()=>i[n],enumerable:!(s=h(i,n))||s.enumerable});return e};var v=(e,i,r)=>(r=e!=null?p(w(e)):{},c(i||!e||!e.__esModule?d(r,"default",{value:e,enumerable:!0}):r,e)),_=e=>c(d({},"__esModule",{value:!0}),e);var j={};y(j,{default:()=>B});var l=v(m("react"));var t=v(m("react")),a=m("lucide-react"),P=({activeTabId:e,onTabChange:i})=>{let r=(0,t.useMemo)(()=>[{id:"home",icon:a.Home,label:"Home"},{id:"heart",icon:a.Heart,label:"Likes"},{id:"add",icon:a.Plus,label:"Create"},{id:"profile",icon:a.User,label:"Profile"},{id:"notifications",icon:a.Bell,label:"Notify"}],[]),[s,n]=(0,t.useState)(0);return(0,t.useEffect)(()=>{let o=r.findIndex(f=>f.id===e);o!==-1&&n(o)},[e,r]),t.default.createElement("nav",{className:"relative w-full max-w-[400px]",role:"navigation"},t.default.createElement("div",{className:"relative flex h-20 w-full items-center justify-between rounded-full bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.8)] overflow-hidden"},t.default.createElement("div",{className:"absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none opacity-60"}),t.default.createElement("div",{className:"absolute inset-y-0 left-0 pointer-events-none transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1)",style:{width:`${100/r.length}%`,transform:`translateX(${s*100}%)`}},t.default.createElement("div",{className:"relative w-full h-full flex flex-col items-center justify-end"},t.default.createElement("div",{className:"w-full h-full bg-gradient-to-t from-red-600/20 via-red-500/5 to-transparent opacity-100 blur-md"}),t.default.createElement("div",{className:"absolute bottom-0 h-[2px] w-8 rounded-full bg-red-500 shadow-[0_-2px_15px_2px_rgba(239,68,68,0.8)] z-20"}))),t.default.createElement("div",{className:"relative z-20 flex w-full h-full justify-between items-center"},r.map((o,f)=>{let u=e===o.id,x=o.icon;return t.default.createElement("button",{key:o.id,onClick:()=>i(o.id),className:"group relative flex flex-1 items-center justify-center outline-none h-full","aria-label":o.label},t.default.createElement("div",{className:"relative flex flex-col items-center justify-center transition-all duration-300 ease-out"},t.default.createElement(x,{size:26,strokeWidth:u?2:1.5,className:`
-
-                      relative z-10 transition-colors duration-300
-
-                      ${u?"text-white drop-shadow-[0_0_12px_rgba(239,68,68,1)]":"text-white/20 group-hover:text-red-400"}
-
-                    `})))}))))},b=P;var T=()=>{let[e,i]=(0,l.useState)("home");return l.default.createElement("div",{className:"flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4"},l.default.createElement("h1",{className:"text-2xl font-bold text-white mb-8"},"Premium Navigation Bar Demo"),l.default.createElement("div",{className:"w-full max-w-md"},l.default.createElement(b,{activeTabId:e,onTabChange:i})),l.default.createElement("div",{className:"mt-8 text-white"},l.default.createElement("p",null,"Active Tab: ",e)))},B=T;return _(j);})();
-
-  </script>
-  <script>
-    // Render the demo component
+    
+    // Simple component renderer
     const rootElement = document.getElementById('root');
-    if (typeof DemoComponent !== 'undefined' && DemoComponent.default) {
-      const root = ReactDOM.createRoot(rootElement);
-      root.render(React.createElement(DemoComponent.default));
-    } else {
-      rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component demo loaded successfully!</p></div>';
-    }
+    rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component demo loaded successfully!</p></div>';
   </script>
 </body>
 </html>

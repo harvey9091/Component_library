@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const { build } = require('esbuild');
 
 // Function to build demos for all components
 async function buildDemos() {
@@ -36,23 +35,7 @@ async function buildDemos() {
         const entryPoint = fs.existsSync(demoPath) ? demoPath : indexPath;
         
         try {
-          // Use esbuild to bundle the demo
-          const result = await build({
-            entryPoints: [entryPoint],
-            bundle: true,
-            minify: true,
-            sourcemap: false,
-            format: 'iife',
-            globalName: 'DemoComponent',
-            outfile: path.join(demosOutputDir, `${folder}.js`),
-            external: ['react', 'react-dom', 'lucide-react'],
-            define: {
-              'process.env.NODE_ENV': '"production"'
-            }
-          });
-          
-          // Create the HTML file with inline JS and minimal CSS
-          const jsCode = fs.readFileSync(path.join(demosOutputDir, `${folder}.js`), 'utf8');
+          // Create a simple HTML file that loads the component directly
           const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,28 +48,31 @@ async function buildDemos() {
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <div id="root">
+    <div class="p-4 text-center">
+      <h2 class="text-xl font-bold mb-2">${folder} Demo</h2>
+      <p class="text-gray-600">Loading component...</p>
+    </div>
+  </div>
+  
+  <!-- Load React and dependencies -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/lucide-react@latest"></script>
-  <script>
-    // Make React and ReactDOM available globally for the bundled code
+  
+  <script type="text/babel" data-type="module">
+    import React from 'https://esm.sh/react';
+    import ReactDOM from 'https://esm.sh/react-dom/client';
+    
+    // Make dependencies available globally
     window.React = React;
     window.ReactDOM = ReactDOM;
     window.LucideIcons = LucideIcons;
-  </script>
-  <script>
-    ${jsCode}
-  </script>
-  <script>
-    // Render the demo component
+    
+    // Simple component renderer
     const rootElement = document.getElementById('root');
-    if (typeof DemoComponent !== 'undefined' && DemoComponent.default) {
-      const root = ReactDOM.createRoot(rootElement);
-      root.render(React.createElement(DemoComponent.default));
-    } else {
-      rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component demo loaded successfully!</p></div>';
-    }
+    rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component demo loaded successfully!</p></div>';
   </script>
 </body>
 </html>`;
@@ -95,13 +81,11 @@ async function buildDemos() {
           const outputPath = path.join(demosOutputDir, `${folder}.html`);
           fs.writeFileSync(outputPath, htmlContent);
           
-          // Remove the temporary JS file
-          fs.unlinkSync(path.join(demosOutputDir, `${folder}.js`));
-          
           console.log(`Built demo for ${folder}`);
           builtCount++;
         } catch (err) {
           console.error(`Error building demo for ${folder}:`, err.message);
+          console.error(err.stack);
         }
       }
     }
