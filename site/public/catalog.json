@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "PremiumNavBar",
+    "name": "PremiumNavBar",
+    "description": "A premium navigation bar with glass morphism effect and animated active tab indicator",
+    "tags": [
+      "navigation",
+      "ui",
+      "glassmorphism",
+      "animation"
+    ]
+  }
+]
