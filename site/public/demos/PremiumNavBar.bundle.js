@@ -1,32 +1,4 @@
 var DemoComponent = (() => {
-  // Expose React and ReactDOM globally for the demo
-  var globalReact, globalReactDOM;
-  
-  // Helper function to find React and ReactDOM in the bundle
-  function exposeReactGlobals() {
-    // Look for React and ReactDOM in the bundle and expose them globally
-    if (typeof require_react === 'function') {
-      try {
-        globalReact = require_react();
-        window.React = globalReact;
-      } catch (e) {
-        console.warn('Could not expose React globally:', e);
-      }
-    }
-    
-    // Look for ReactDOM
-    if (typeof require_react_dom === 'function') {
-      try {
-        globalReactDOM = require_react_dom();
-        window.ReactDOM = globalReactDOM;
-      } catch (e) {
-        console.warn('Could not expose ReactDOM globally:', e);
-      }
-    }
-  }
-  
-  // Call the function to expose globals
-  exposeReactGlobals();
   var __create = Object.create;
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
