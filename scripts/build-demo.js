@@ -70,12 +70,23 @@ async function buildDemos() {
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/lucide-react@latest"></script>
   <script>
+    // Make React and ReactDOM available globally for the bundled code
+    window.React = React;
+    window.ReactDOM = ReactDOM;
+    window.LucideIcons = LucideIcons;
+  </script>
+  <script>
     ${jsCode}
   </script>
   <script>
-    // Simple component renderer
-    const root = document.getElementById('root');
-    root.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component demo loaded successfully!</p></div>';
+    // Render the demo component
+    const rootElement = document.getElementById('root');
+    if (typeof DemoComponent !== 'undefined' && DemoComponent.default) {
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(React.createElement(DemoComponent.default));
+    } else {
+      rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component demo loaded successfully!</p></div>';
+    }
   </script>
 </body>
 </html>`;
