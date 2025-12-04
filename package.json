@@ -1,0 +1,11 @@
+{
+  "name": "component-library",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "generate-catalog": "node scripts/generate-catalog.js",
+    "site:dev": "cd site && npm run dev",
+    "site:build": "cd site && npm run build",
+    "prepare": "npm run generate-catalog"
+  }
+}
