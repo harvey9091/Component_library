@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toEmbedDemoUrl, resolveEmbed } from '../src/utils/demoUrl';
 
 export default function Home() {
   const [catalog, setCatalog] = useState([]);
@@ -10,27 +11,21 @@ export default function Home() {
       .catch(error => console.error('Error loading catalog:', error));
   }, []);
 
-  const getEmbedUrl = (demoPath) => {
-    const normalized = demoPath.replace(/^\/+/, '');
-    return `https://raw.githack.com/harvey9091/Component_library/main/site/public/${normalized}`;
-  };
-
   const handlePreviewClick = async (demoPath, event) => {
     event.preventDefault();
-    const url = getEmbedUrl(demoPath);
+    const url = toEmbedDemoUrl('harvey9091', 'Component_library', 'main', demoPath);
     
     // Log for debugging
     console.log(`FLUR: loading demo from ${url}`);
     
     // Try a non-blocking HEAD check
     try {
-      const resp = await fetch(url, { method: 'HEAD' });
-      if (resp.ok) {
-        window.open(url, '_blank');
-        return;
-      }
+      const resolvedUrl = await resolveEmbed(demoPath);
+      console.log(`FLUR: demo URL validation ok`);
+      window.open(resolvedUrl, '_blank');
+      return;
     } catch (e) {
-      console.log(`FLUR: HEAD check failed for ${url}`, e);
+      console.log(`FLUR: demo URL validation fail`, e);
     }
     
     // Still open the URL even if HEAD check failed
@@ -67,7 +62,7 @@ export default function Home() {
                 <div className="flex gap-2">
                   {component.demoPath && (
                     <a 
-                      href={getEmbedUrl(component.demoPath)} 
+                      href={toEmbedDemoUrl('harvey9091', 'Component_library', 'main', component.demoPath)} 
                       onClick={(e) => handlePreviewClick(component.demoPath, e)}
                       target="_blank" 
                       rel="noopener noreferrer"
