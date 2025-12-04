@@ -44,7 +44,8 @@ async function buildDemos() {
             fs.unlinkSync(bundlePath);
           }
           
-          // Bundle the component using esbuild with React and ReactDOM as external dependencies
+          // Bundle the component using esbuild with specific handling for dependencies
+          // We'll bundle everything together to avoid dynamic require issues
           const result = await build({
             entryPoints: [entryPoint],
             bundle: true,
@@ -63,9 +64,51 @@ async function buildDemos() {
             define: {
               'process.env.NODE_ENV': '"production"'
             },
-            // Externalize React and ReactDOM so they're not bundled
-            external: ['react', 'react-dom']
+            // Bundle all dependencies including React and ReactDOM
+            // This avoids dynamic require issues
+            packages: 'bundle'
           });
+          
+          // Read the generated bundle file and modify it to expose React and ReactDOM globally
+          let bundleContent = fs.readFileSync(bundlePath, 'utf8');
+          
+          // Add code to expose React and ReactDOM globally
+          // We need to find where React and ReactDOM are defined in the bundle and expose them
+          const modifiedBundleContent = bundleContent.replace(
+            'var DemoComponent = (() => {',
+            `var DemoComponent = (() => {
+  // Expose React and ReactDOM globally for the demo
+  var globalReact, globalReactDOM;
+  
+  // Helper function to find React and ReactDOM in the bundle
+  function exposeReactGlobals() {
+    // Look for React and ReactDOM in the bundle and expose them globally
+    if (typeof require_react === 'function') {
+      try {
+        globalReact = require_react();
+        window.React = globalReact;
+      } catch (e) {
+        console.warn('Could not expose React globally:', e);
+      }
+    }
+    
+    // Look for ReactDOM
+    if (typeof require_react_dom === 'function') {
+      try {
+        globalReactDOM = require_react_dom();
+        window.ReactDOM = globalReactDOM;
+      } catch (e) {
+        console.warn('Could not expose ReactDOM globally:', e);
+      }
+    }
+  }
+  
+  // Call the function to expose globals
+  exposeReactGlobals();`
+          );
+          
+          // Write the modified bundle back to file
+          fs.writeFileSync(bundlePath, modifiedBundleContent);
           
           // Create the HTML file with the bundled component
           const htmlContent = `<!DOCTYPE html>
@@ -167,11 +210,7 @@ async function buildDemos() {
     }
   </script>
   
-  <!-- Load React and ReactDOM from CDN -->
-  <script src="https://unpkg.com/react@19.2.1/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@19.2.1/umd/react-dom.development.js"></script>
-  
-  <!-- Load the bundled component -->
+  <!-- Load the bundled component (includes all dependencies: React, ReactDOM, lucide-react) -->
   <script>
     console.log('Demo: loading bundle: ./${folder}.bundle.js');
   </script>
@@ -186,7 +225,7 @@ async function buildDemos() {
       try {
         console.log('Demo: Starting component rendering process...');
         
-        // Check if React is available globally
+        // Check if React is available globally (it should be bundled)
         console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
         console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
         
@@ -223,20 +262,27 @@ async function buildDemos() {
         
         // Try to render with React
         try {
-          if (typeof ReactDOM !== 'undefined' && typeof React !== 'undefined') {
-            if (ReactDOM.createRoot) {
-              console.log('Demo: Using createRoot');
-              const root = ReactDOM.createRoot(rootElement);
-              const element = React.createElement(Component);
+          // Check if React is available in the bundle or globally
+          const reactLib = window.React || (typeof DemoComponent !== 'undefined' && DemoComponent.React) || null;
+          const reactDOMLib = window.ReactDOM || (typeof DemoComponent !== 'undefined' && DemoComponent.ReactDOM) || null;
+          
+          console.log('Demo: React library available:', !!reactLib, reactLib?.version ? 'version: ' + reactLib.version : '');
+          console.log('Demo: ReactDOM library available:', !!reactDOMLib, reactDOMLib?.version ? 'version: ' + reactDOMLib.version : '');
+          
+          if (reactLib && reactDOMLib) {
+            if (reactDOMLib.createRoot) {
+              console.log('Demo: Using createRoot with available React');
+              const root = reactDOMLib.createRoot(rootElement);
+              const element = reactLib.createElement(Component);
               root.render(element);
               console.log('Demo: Mount succeeded');
-            } else if (ReactDOM.render) {
-              console.log('Demo: Using legacy render');
-              const element = React.createElement(Component);
-              ReactDOM.render(element, rootElement);
+            } else if (reactDOMLib.render) {
+              console.log('Demo: Using legacy render with available React');
+              const element = reactLib.createElement(Component);
+              reactDOMLib.render(element, rootElement);
               console.log('Demo: Mount succeeded');
             } else {
-              throw new Error('No rendering method found');
+              throw new Error('No rendering method found in ReactDOM');
             }
           } else {
             throw new Error('React or ReactDOM not available');

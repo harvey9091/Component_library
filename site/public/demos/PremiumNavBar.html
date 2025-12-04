@@ -97,15 +97,11 @@
     }
   </script>
   
-  <!-- Load React and ReactDOM from CDN -->
-  <script src="https://unpkg.com/react@19.2.1/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@19.2.1/umd/react-dom.development.js"></script>
-  
-  <!-- Load the bundled component -->
+  <!-- Load the bundled component (includes all dependencies: React, ReactDOM, lucide-react) -->
   <script>
     console.log('Demo: loading bundle: ./PremiumNavBar.bundle.js');
   </script>
-  <script src="./PremiumNavBar.bundle.js?v=1764859273588"></script>
+  <script src="./PremiumNavBar.bundle.js?v=1764859409267"></script>
   <script>
     console.log('Demo: bundle loaded');
   </script>
@@ -116,7 +112,7 @@
       try {
         console.log('Demo: Starting component rendering process...');
         
-        // Check if React is available globally
+        // Check if React is available globally (it should be bundled)
         console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
         console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
         
@@ -153,20 +149,27 @@
         
         // Try to render with React
         try {
-          if (typeof ReactDOM !== 'undefined' && typeof React !== 'undefined') {
-            if (ReactDOM.createRoot) {
-              console.log('Demo: Using createRoot');
-              const root = ReactDOM.createRoot(rootElement);
-              const element = React.createElement(Component);
+          // Check if React is available in the bundle or globally
+          const reactLib = window.React || (typeof DemoComponent !== 'undefined' && DemoComponent.React) || null;
+          const reactDOMLib = window.ReactDOM || (typeof DemoComponent !== 'undefined' && DemoComponent.ReactDOM) || null;
+          
+          console.log('Demo: React library available:', !!reactLib, reactLib?.version ? 'version: ' + reactLib.version : '');
+          console.log('Demo: ReactDOM library available:', !!reactDOMLib, reactDOMLib?.version ? 'version: ' + reactDOMLib.version : '');
+          
+          if (reactLib && reactDOMLib) {
+            if (reactDOMLib.createRoot) {
+              console.log('Demo: Using createRoot with available React');
+              const root = reactDOMLib.createRoot(rootElement);
+              const element = reactLib.createElement(Component);
               root.render(element);
               console.log('Demo: Mount succeeded');
-            } else if (ReactDOM.render) {
-              console.log('Demo: Using legacy render');
-              const element = React.createElement(Component);
-              ReactDOM.render(element, rootElement);
+            } else if (reactDOMLib.render) {
+              console.log('Demo: Using legacy render with available React');
+              const element = reactLib.createElement(Component);
+              reactDOMLib.render(element, rootElement);
               console.log('Demo: Mount succeeded');
             } else {
-              throw new Error('No rendering method found');
+              throw new Error('No rendering method found in ReactDOM');
             }
           } else {
             throw new Error('React or ReactDOM not available');
