@@ -15,6 +15,28 @@ export default function Home() {
     return `https://raw.githack.com/harvey9091/Component_library/main/site/public/${normalized}`;
   };
 
+  const handlePreviewClick = async (demoPath, event) => {
+    event.preventDefault();
+    const url = getEmbedUrl(demoPath);
+    
+    // Log for debugging
+    console.log(`FLUR: loading demo from ${url}`);
+    
+    // Try a non-blocking HEAD check
+    try {
+      const resp = await fetch(url, { method: 'HEAD' });
+      if (resp.ok) {
+        window.open(url, '_blank');
+        return;
+      }
+    } catch (e) {
+      console.log(`FLUR: HEAD check failed for ${url}`, e);
+    }
+    
+    // Still open the URL even if HEAD check failed
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-12">
       <div className="max-w-4xl mx-auto px-4">
@@ -46,6 +68,7 @@ export default function Home() {
                   {component.demoPath && (
                     <a 
                       href={getEmbedUrl(component.demoPath)} 
+                      onClick={(e) => handlePreviewClick(component.demoPath, e)}
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
