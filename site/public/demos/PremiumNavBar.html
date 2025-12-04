@@ -97,51 +97,35 @@
     }
   </script>
   
-  <!-- Load React and ReactDOM from CDN as fallback -->
+  <!-- Embed React and ReactDOM directly to avoid CORS issues -->
   <script>
-    // Function to load a script and return a promise
-    function loadScript(src) {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-        document.head.appendChild(script);
-      });
-    }
-    
-    // Load React and ReactDOM
-    Promise.all([
-      loadScript('https://unpkg.com/react@19.2.1/umd/react.development.js'),
-      loadScript('https://unpkg.com/react-dom@19.2.1/umd/react-dom.development.js')
-    ]).then(() => {
-      console.log('Demo: React and ReactDOM loaded successfully');
-      window.reactLoaded = true;
-      window.reactDOMLoaded = true;
-      // Trigger the component rendering
-      if (window.componentRenderCallback) {
-        window.componentRenderCallback();
-      }
-    }).catch(error => {
-      console.error('Demo: Failed to load React or ReactDOM:', error);
-      showError('Failed to load React or ReactDOM: ' + error.message);
-    });
+    Not found: /react@19.2.1/umd/react.development.js
+  </script>
+  <script>
+    Not found: /react-dom@19.2.1/umd/react-dom.development.js
   </script>
   
   <!-- Load the bundled component -->
   <script>
     console.log('Demo: loading bundle: ./PremiumNavBar.bundle.js');
   </script>
-  <script src="./PremiumNavBar.bundle.js?v=1764860883318"></script>
+  <script src="./PremiumNavBar.bundle.js?v=1764861252923"></script>
   <script>
     console.log('Demo: bundle loaded');
   </script>
   
   <script>
-    // Store the render callback to be called when React is ready
-    window.componentRenderCallback = function() {
+    // Render the component when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
       try {
         console.log('Demo: Starting component rendering process...');
+        
+        // Check if React and ReactDOM are available
+        console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
+        console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
+        
+        // Check if we have the component
+        console.log('Demo: Bundle exports:', Object.keys(typeof DemoComponent !== 'undefined' ? DemoComponent : {}));
         
         // Render the component
         const rootElement = document.getElementById('root');
@@ -156,13 +140,6 @@
         
         // Try to render with React
         try {
-          // Check if React and ReactDOM are available
-          console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
-          console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
-          
-          // Check if we have the component
-          console.log('Demo: Bundle exports:', Object.keys(typeof DemoComponent !== 'undefined' ? DemoComponent : {}));
-          
           if (typeof DemoComponent === 'undefined') {
             console.error('Demo: DemoComponent is not defined');
             showError('DemoComponent is not defined. Check browser console for details.');
@@ -209,13 +186,7 @@
         console.error('Demo: Error stack:', error.stack);
         showError('Rendering process failed: ' + error.message);
       }
-    };
-    
-    // If React is already loaded, render immediately
-    // Otherwise, wait for the loadScript promises to resolve
-    if (window.reactLoaded && window.reactDOMLoaded) {
-      window.componentRenderCallback();
-    }
+    });
   </script>
 </body>
 </html>

@@ -44,8 +44,8 @@ async function buildDemos() {
             fs.unlinkSync(bundlePath);
           }
           
-          // Bundle the component using esbuild with specific handling for dependencies
-          // We'll bundle everything together to avoid dynamic require issues
+          // Bundle the component using esbuild WITHOUT bundling React and ReactDOM
+          // We'll load them separately to avoid conflicts
           const result = await build({
             entryPoints: [entryPoint],
             bundle: true,
@@ -64,10 +64,13 @@ async function buildDemos() {
             define: {
               'process.env.NODE_ENV': '"production"'
             },
-            // Bundle all dependencies including React and ReactDOM
-            // This avoids dynamic require issues
-            packages: 'bundle'
+            // Don't bundle React and ReactDOM, mark them as external
+            external: ['react', 'react-dom']
           });
+          
+          // Read the React and ReactDOM UMD bundles
+          const reactBundle = await fetch('https://unpkg.com/react@19.2.1/umd/react.development.js').then(res => res.text());
+          const reactDOMBundle = await fetch('https://unpkg.com/react-dom@19.2.1/umd/react-dom.development.js').then(res => res.text());
           
           // Create the HTML file with the bundled component
           const htmlContent = `<!DOCTYPE html>
@@ -169,35 +172,12 @@ async function buildDemos() {
     }
   </script>
   
-  <!-- Load React and ReactDOM from CDN as fallback -->
+  <!-- Embed React and ReactDOM directly to avoid CORS issues -->
   <script>
-    // Function to load a script and return a promise
-    function loadScript(src) {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error(\`Failed to load script: \${src}\`));
-        document.head.appendChild(script);
-      });
-    }
-    
-    // Load React and ReactDOM
-    Promise.all([
-      loadScript('https://unpkg.com/react@19.2.1/umd/react.development.js'),
-      loadScript('https://unpkg.com/react-dom@19.2.1/umd/react-dom.development.js')
-    ]).then(() => {
-      console.log('Demo: React and ReactDOM loaded successfully');
-      window.reactLoaded = true;
-      window.reactDOMLoaded = true;
-      // Trigger the component rendering
-      if (window.componentRenderCallback) {
-        window.componentRenderCallback();
-      }
-    }).catch(error => {
-      console.error('Demo: Failed to load React or ReactDOM:', error);
-      showError('Failed to load React or ReactDOM: ' + error.message);
-    });
+    ${reactBundle}
+  </script>
+  <script>
+    ${reactDOMBundle}
   </script>
   
   <!-- Load the bundled component -->
@@ -210,10 +190,17 @@ async function buildDemos() {
   </script>
   
   <script>
-    // Store the render callback to be called when React is ready
-    window.componentRenderCallback = function() {
+    // Render the component when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
       try {
         console.log('Demo: Starting component rendering process...');
+        
+        // Check if React and ReactDOM are available
+        console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
+        console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
+        
+        // Check if we have the component
+        console.log('Demo: Bundle exports:', Object.keys(typeof DemoComponent !== 'undefined' ? DemoComponent : {}));
         
         // Render the component
         const rootElement = document.getElementById('root');
@@ -228,13 +215,6 @@ async function buildDemos() {
         
         // Try to render with React
         try {
-          // Check if React and ReactDOM are available
-          console.log('Demo: React present:', typeof React !== 'undefined', React?.version ? 'version: ' + React.version : '');
-          console.log('Demo: ReactDOM present:', typeof ReactDOM !== 'undefined', ReactDOM?.version ? 'version: ' + ReactDOM.version : '');
-          
-          // Check if we have the component
-          console.log('Demo: Bundle exports:', Object.keys(typeof DemoComponent !== 'undefined' ? DemoComponent : {}));
-          
           if (typeof DemoComponent === 'undefined') {
             console.error('Demo: DemoComponent is not defined');
             showError('DemoComponent is not defined. Check browser console for details.');
@@ -281,13 +261,7 @@ async function buildDemos() {
         console.error('Demo: Error stack:', error.stack);
         showError('Rendering process failed: ' + error.message);
       }
-    };
-    
-    // If React is already loaded, render immediately
-    // Otherwise, wait for the loadScript promises to resolve
-    if (window.reactLoaded && window.reactDOMLoaded) {
-      window.componentRenderCallback();
-    }
+    });
   </script>
 </body>
 </html>`;
