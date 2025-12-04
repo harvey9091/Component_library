@@ -6,6 +6,7 @@
     "generate-catalog": "node scripts/generate-catalog.js",
     "build-demo": "node scripts/build-demo.js",
     "test-demo": "node scripts/test-component-preview.js",
+    "self-heal": "node scripts/self-healing-demo.js",
     "prepare": "npm run generate-catalog && npm run build-demo",
     "site:dev": "cd site && npm run dev",
     "site:build": "cd site && npm run build"
