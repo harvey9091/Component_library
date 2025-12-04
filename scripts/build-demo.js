@@ -157,8 +157,9 @@ async function buildDemos() {
         }
         
         // Extract React and ReactDOM from the global library objects
-        const React = ReactLibrary;
-        const ReactDOM = ReactDOMLibrary;
+        // The bundles return functions that need to be called to get the actual libraries
+        const React = typeof ReactLibrary === 'function' ? ReactLibrary() : ReactLibrary;
+        const ReactDOM = typeof ReactDOMLibrary === 'function' ? ReactDOMLibrary() : ReactDOMLibrary;
         
         console.log('React version:', React.version);
         console.log('ReactDOM available:', !!ReactDOM);
@@ -170,7 +171,7 @@ async function buildDemos() {
           return;
         }
         
-        console.log('DemoComponent found:', typeof DemoComponent);
+        console.log('DemoComponent found:', typeof DemoComponent, DemoComponent);
         
         // Get the component
         const Component = DemoComponent.default || DemoComponent;
