@@ -18,10 +18,6 @@
   </div>
   
   <script>
-    // Prevent any external React from interfering
-    window.React = undefined;
-    window.ReactDOM = undefined;
-    
     // Simple error handling
     window.onerror = function(message, source, lineno, colno, error) {
       console.error('Global error:', message, 'at', source, ':', lineno, ':', colno);
@@ -45,7 +41,7 @@
           return;
         }
         
-        console.log('DemoComponent found:', typeof DemoComponent, DemoComponent);
+        console.log('DemoComponent found:', typeof DemoComponent);
         
         // Get the component
         const Component = DemoComponent.default || DemoComponent;
@@ -58,70 +54,83 @@
         
         console.log('Component resolved:', typeof Component);
         
-        // Render the component
-        const rootElement = document.getElementById('root');
-        if (!rootElement) {
-          console.error('Root element not found');
-          return;
+        // Render the component using a self-executing approach
+        // We'll create a simpler rendering mechanism that doesn't rely on React internals
+        function renderComponent() {
+          const rootElement = document.getElementById('root');
+          if (!rootElement) {
+            console.error('Root element not found');
+            return;
+          }
+          
+          // Clear the root element
+          rootElement.innerHTML = '';
+          
+          // Create a container for our component
+          const container = document.createElement('div');
+          container.className = 'component-container';
+          rootElement.appendChild(container);
+          
+          // Try to render with the bundled React
+          try {
+            // Access React and ReactDOM from the global DemoComponent
+            // The bundle should have React and ReactDOM available
+            console.log('Attempting to render with bundled React...');
+            
+            // Create a simple rendering function
+            function renderWithBundledReact() {
+              // Check if React is available in the bundle
+              const bundledReact = DemoComponent.React || window.React;
+              const bundledReactDOM = DemoComponent.ReactDOM || window.ReactDOM;
+              
+              if (bundledReact && bundledReactDOM) {
+                console.log('Found React and ReactDOM');
+                console.log('React version:', bundledReact.version);
+                
+                // Try to create root and render
+                try {
+                  if (bundledReactDOM.createRoot) {
+                    console.log('Using createRoot');
+                    const root = bundledReactDOM.createRoot(container);
+                    const element = bundledReact.createElement(Component);
+                    root.render(element);
+                    console.log('Component rendered successfully with createRoot');
+                    return true;
+                  } else if (bundledReactDOM.render) {
+                    console.log('Using legacy render');
+                    const element = bundledReact.createElement(Component);
+                    bundledReactDOM.render(element, container);
+                    console.log('Component rendered successfully with legacy render');
+                    return true;
+                  }
+                } catch (renderError) {
+                  console.error('Error during React rendering:', renderError);
+                  console.error('Render error stack:', renderError.stack);
+                }
+              } else {
+                console.log('React or ReactDOM not found in bundle or window');
+                console.log('DemoComponent keys:', Object.keys(DemoComponent));
+                console.log('Window.React:', typeof window.React);
+                console.log('Window.ReactDOM:', typeof window.ReactDOM);
+              }
+              return false;
+            }
+            
+            // Try rendering with bundled React first
+            if (!renderWithBundledReact()) {
+              // If that fails, show a message
+              container.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component loaded but React rendering failed.</p><p class="text-xs mt-2">Check console for details</p></div>';
+            }
+          } catch (error) {
+            console.error('Error in renderComponent:', error);
+            container.innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p></div>';
+          }
         }
         
-        // Try to render with React if available in the bundle
-        // The bundle should include React and ReactDOM
-        if (typeof DemoComponent.React !== 'undefined' && typeof DemoComponent.ReactDOM !== 'undefined') {
-          console.log('Using bundled React and ReactDOM');
-          const React = DemoComponent.React;
-          const ReactDOM = DemoComponent.ReactDOM;
-          
-          try {
-            if (typeof ReactDOM.createRoot === 'function') {
-              console.log('Using React 18+ rendering');
-              const root = ReactDOM.createRoot(rootElement);
-              root.render(React.createElement(Component));
-            } else if (typeof ReactDOM.render === 'function') {
-              console.log('Using legacy React rendering');
-              ReactDOM.render(React.createElement(Component), rootElement);
-            } else {
-              console.error('No React rendering method available in bundle');
-              // Fallback - show static content
-              rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component loaded successfully!</p></div>';
-            }
-          } catch (reactError) {
-            console.error('React rendering failed:', reactError);
-            console.error('React error stack:', reactError.stack);
-            // Fallback to static content
-            rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component loaded successfully!</p></div>';
-          }
-        } else {
-          console.log('Bundled React not found, checking global React');
-          // Check for global React (fallback)
-          if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
-            console.log('Using global React and ReactDOM');
-            try {
-              if (typeof ReactDOM.createRoot === 'function') {
-                console.log('Using React 18+ rendering with global React');
-                const root = ReactDOM.createRoot(rootElement);
-                root.render(React.createElement(Component));
-              } else if (typeof ReactDOM.render === 'function') {
-                console.log('Using legacy React rendering with global React');
-                ReactDOM.render(React.createElement(Component), rootElement);
-              } else {
-                console.error('No React rendering method available with global React');
-                // Fallback - show static content
-                rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component loaded successfully!</p></div>';
-              }
-            } catch (reactError) {
-              console.error('Global React rendering failed:', reactError);
-              // Fallback to static content
-              rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component loaded successfully!</p></div>';
-            }
-          } else {
-            console.log('No React found, using static content');
-            // Fallback - show static content
-            rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component loaded successfully!</p></div>';
-          }
-        }
+        // Execute the rendering
+        renderComponent();
       } catch (error) {
-        console.error('Error rendering component:', error);
+        console.error('Error in main rendering process:', error);
         console.error('Error stack:', error.stack);
         document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p></div>';
       }
