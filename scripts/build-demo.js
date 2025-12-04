@@ -69,6 +69,47 @@ async function buildDemos() {
             packages: 'bundle'
           });
           
+          // Read the generated bundle file and modify it to expose React and ReactDOM globally
+          let bundleContent = fs.readFileSync(bundlePath, 'utf8');
+          
+          // Add code to expose React and ReactDOM globally
+          // We need to find where React and ReactDOM are defined in the bundle and expose them
+          const modifiedBundleContent = bundleContent.replace(
+            'var DemoComponent = (() => {',
+            `var DemoComponent = (() => {
+  // Expose React and ReactDOM globally for the demo
+  var globalReact, globalReactDOM;
+  
+  // Helper function to find React and ReactDOM in the bundle
+  function exposeReactGlobals() {
+    // Look for React and ReactDOM in the bundle and expose them globally
+    if (typeof require_react === 'function') {
+      try {
+        globalReact = require_react();
+        window.React = globalReact;
+      } catch (e) {
+        console.warn('Could not expose React globally:', e);
+      }
+    }
+    
+    // Look for ReactDOM
+    if (typeof require_react_dom === 'function') {
+      try {
+        globalReactDOM = require_react_dom();
+        window.ReactDOM = globalReactDOM;
+      } catch (e) {
+        console.warn('Could not expose ReactDOM globally:', e);
+      }
+    }
+  }
+  
+  // Call the function to expose globals
+  exposeReactGlobals();`
+          );
+          
+          // Write the modified bundle back to file
+          fs.writeFileSync(bundlePath, modifiedBundleContent);
+          
           // Create the HTML file with the bundled component
           const htmlContent = `<!DOCTYPE html>
 <html lang="en">
@@ -221,47 +262,30 @@ async function buildDemos() {
         
         // Try to render with React
         try {
-          // Check if React is available in the bundle
-          const bundledReact = DemoComponent.React || window.React;
-          const bundledReactDOM = DemoComponent.ReactDOM || window.ReactDOM;
+          // Check if React is available in the bundle or globally
+          const reactLib = window.React || (typeof DemoComponent !== 'undefined' && DemoComponent.React) || null;
+          const reactDOMLib = window.ReactDOM || (typeof DemoComponent !== 'undefined' && DemoComponent.ReactDOM) || null;
           
-          console.log('Demo: Bundled React available:', !!bundledReact, bundledReact?.version ? 'version: ' + bundledReact.version : '');
-          console.log('Demo: Bundled ReactDOM available:', !!bundledReactDOM, bundledReactDOM?.version ? 'version: ' + bundledReactDOM.version : '');
+          console.log('Demo: React library available:', !!reactLib, reactLib?.version ? 'version: ' + reactLib.version : '');
+          console.log('Demo: ReactDOM library available:', !!reactDOMLib, reactDOMLib?.version ? 'version: ' + reactDOMLib.version : '');
           
-          if (bundledReact && bundledReactDOM) {
-            if (bundledReactDOM.createRoot) {
-              console.log('Demo: Using createRoot with bundled React');
-              const root = bundledReactDOM.createRoot(rootElement);
-              const element = bundledReact.createElement(Component);
+          if (reactLib && reactDOMLib) {
+            if (reactDOMLib.createRoot) {
+              console.log('Demo: Using createRoot with available React');
+              const root = reactDOMLib.createRoot(rootElement);
+              const element = reactLib.createElement(Component);
               root.render(element);
               console.log('Demo: Mount succeeded');
-            } else if (bundledReactDOM.render) {
-              console.log('Demo: Using legacy render with bundled React');
-              const element = bundledReact.createElement(Component);
-              bundledReactDOM.render(element, rootElement);
+            } else if (reactDOMLib.render) {
+              console.log('Demo: Using legacy render with available React');
+              const element = reactLib.createElement(Component);
+              reactDOMLib.render(element, rootElement);
               console.log('Demo: Mount succeeded');
             } else {
-              throw new Error('No rendering method found in bundled ReactDOM');
-            }
-          } else if (typeof ReactDOM !== 'undefined' && typeof React !== 'undefined') {
-            // Fallback to global React if bundled React is not available
-            console.log('Demo: Using global React as fallback');
-            if (ReactDOM.createRoot) {
-              console.log('Demo: Using createRoot with global React');
-              const root = ReactDOM.createRoot(rootElement);
-              const element = React.createElement(Component);
-              root.render(element);
-              console.log('Demo: Mount succeeded');
-            } else if (ReactDOM.render) {
-              console.log('Demo: Using legacy render with global React');
-              const element = React.createElement(Component);
-              ReactDOM.render(element, rootElement);
-              console.log('Demo: Mount succeeded');
-            } else {
-              throw new Error('No rendering method found in global ReactDOM');
+              throw new Error('No rendering method found in ReactDOM');
             }
           } else {
-            throw new Error('Neither bundled nor global React/ReactDOM available');
+            throw new Error('React or ReactDOM not available');
           }
         } catch (renderError) {
           console.error('Demo: Mount failed:', renderError);
