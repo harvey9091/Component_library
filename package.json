@@ -5,6 +5,7 @@
   "scripts": {
     "generate-catalog": "node scripts/generate-catalog.js",
     "build-demo": "node scripts/build-demo.js",
+    "test-demo": "node scripts/test-component-preview.js",
     "prepare": "npm run generate-catalog && npm run build-demo",
     "site:dev": "cd site && npm run dev",
     "site:build": "cd site && npm run build"
@@ -14,7 +15,8 @@
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "esbuild": "^0.27.1",
-    "lucide-react": "^0.555.0"
+    "lucide-react": "^0.555.0",
+    "puppeteer": "^24.32.0"
   },
   "dependencies": {
     "@types/react": "^19.2.7",
