@@ -36,16 +36,13 @@ async function buildDemos() {
         const entryPoint = fs.existsSync(demoPath) ? demoPath : indexPath;
         
         try {
-          // Bundle the component using esbuild WITHOUT external dependencies
-          // This will bundle React, ReactDOM, and lucide-react directly into the bundle
+          // Bundle the component using esbuild with specific handling for dependencies
           const result = await build({
             entryPoints: [entryPoint],
             bundle: true,
             format: 'iife',
             globalName: 'DemoComponent',
             outfile: path.join(demosOutputDir, `${folder}.bundle.js`),
-            // Remove external dependencies so they get bundled directly
-            // external: ['react', 'react-dom', 'lucide-react'],
             jsx: 'transform',
             loader: {
               '.tsx': 'tsx',
@@ -57,7 +54,9 @@ async function buildDemos() {
             minify: false,
             define: {
               'process.env.NODE_ENV': '"production"'
-            }
+            },
+            // Explicitly bundle all dependencies
+            packages: 'bundle'
           });
           
           // Create the HTML file with the bundled component
@@ -86,9 +85,23 @@ async function buildDemos() {
       console.error('Global error:', message, 'at', source, ':', lineno, ':', colno);
       document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>' + message + '</p><p class="text-xs mt-2">Check console for details</p></div>';
     };
+    
+    // Ensure React and ReactDOM are available globally
+    window.React = window.React || React;
+    window.ReactDOM = window.ReactDOM || ReactDOM;
   </script>
   
-  <!-- Load the bundled component (now includes all dependencies) -->
+  <!-- Load React and ReactDOM from CDN as fallback -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <script>
+    // Ensure React and ReactDOM are available globally after CDN load
+    window.React = window.React || React;
+    window.ReactDOM = window.ReactDOM || ReactDOM;
+  </script>
+  
+  <!-- Load the bundled component -->
   <script src="./${folder}.bundle.js"></script>
   
   <script>
@@ -101,11 +114,14 @@ async function buildDemos() {
         // Create root element and render
         const rootElement = document.getElementById('root');
         // Use older ReactDOM.render for better compatibility
-        if (window.ReactDOM.createRoot) {
-          const root = ReactDOM.createRoot(rootElement);
-          root.render(React.createElement(Component));
+        if (window.ReactDOM && window.ReactDOM.createRoot) {
+          const root = window.ReactDOM.createRoot(rootElement);
+          root.render(window.React.createElement(Component));
+        } else if (window.ReactDOM) {
+          window.ReactDOM.render(window.React.createElement(Component), rootElement);
         } else {
-          ReactDOM.render(React.createElement(Component), rootElement);
+          // Fallback if ReactDOM is not available
+          rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component loaded but React DOM not available.</p></div>';
         }
       } else {
         document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component not found.</p></div>';
