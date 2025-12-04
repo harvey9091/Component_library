@@ -72,39 +72,28 @@ async function buildDemos() {
           // Read the generated bundle file and modify it to expose React and ReactDOM globally
           let bundleContent = fs.readFileSync(bundlePath, 'utf8');
           
-          // Add code to expose React and ReactDOM globally
-          // We need to find where React and ReactDOM are defined in the bundle and expose them
+          // Add code to expose React and ReactDOM globally at the end of the bundle
+          // This ensures all modules are defined before we try to access them
           const modifiedBundleContent = bundleContent.replace(
-            'var DemoComponent = (() => {',
-            `var DemoComponent = (() => {
-  // Expose React and ReactDOM globally for the demo
-  var globalReact, globalReactDOM;
-  
-  // Helper function to find React and ReactDOM in the bundle
-  function exposeReactGlobals() {
-    // Look for React and ReactDOM in the bundle and expose them globally
+            'return __toCommonJS(demo_exports);',
+            `  // Expose React and ReactDOM globally for the demo
+  try {
     if (typeof require_react === 'function') {
-      try {
-        globalReact = require_react();
-        window.React = globalReact;
-      } catch (e) {
-        console.warn('Could not expose React globally:', e);
-      }
+      window.React = require_react();
     }
-    
-    // Look for ReactDOM
-    if (typeof require_react_dom === 'function') {
-      try {
-        globalReactDOM = require_react_dom();
-        window.ReactDOM = globalReactDOM;
-      } catch (e) {
-        console.warn('Could not expose ReactDOM globally:', e);
-      }
-    }
+  } catch (e) {
+    console.warn('Could not expose React globally:', e);
   }
   
-  // Call the function to expose globals
-  exposeReactGlobals();`
+  try {
+    if (typeof require_react_dom === 'function') {
+      window.ReactDOM = require_react_dom();
+    }
+  } catch (e) {
+    console.warn('Could not expose ReactDOM globally:', e);
+  }
+  
+  return __toCommonJS(demo_exports);`
           );
           
           // Write the modified bundle back to file

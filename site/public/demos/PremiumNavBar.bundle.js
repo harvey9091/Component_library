@@ -1,32 +1,4 @@
 var DemoComponent = (() => {
-  // Expose React and ReactDOM globally for the demo
-  var globalReact, globalReactDOM;
-  
-  // Helper function to find React and ReactDOM in the bundle
-  function exposeReactGlobals() {
-    // Look for React and ReactDOM in the bundle and expose them globally
-    if (typeof require_react === 'function') {
-      try {
-        globalReact = require_react();
-        window.React = globalReact;
-      } catch (e) {
-        console.warn('Could not expose React globally:', e);
-      }
-    }
-    
-    // Look for ReactDOM
-    if (typeof require_react_dom === 'function') {
-      try {
-        globalReactDOM = require_react_dom();
-        window.ReactDOM = globalReactDOM;
-      } catch (e) {
-        console.warn('Could not expose ReactDOM globally:', e);
-      }
-    }
-  }
-  
-  // Call the function to expose globals
-  exposeReactGlobals();
   var __create = Object.create;
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -663,7 +635,11 @@ var DemoComponent = (() => {
   var User = createLucideIcon("user", __iconNode5);
 
   // components/PremiumNavBar/index.tsx
-  var PremiumNavBar = ({ activeTabId, onTabChange }) => {
+  var PremiumNavBar = ({
+    activeTabId = "home",
+    onTabChange = () => {
+    }
+  }) => {
     const tabs = (0, import_react3.useMemo)(() => [
       { id: "home", icon: House, label: "Home" },
       { id: "heart", icon: Heart, label: "Likes" },
@@ -685,12 +661,7 @@ var DemoComponent = (() => {
           transform: `translateX(${activeIndex * 100}%)`
         }
       },
-      /* @__PURE__ */ import_react3.default.createElement("div", { className: "relative w-full h-full flex flex-col items-center justify-end" }, /* @__PURE__ */ import_react3.default.createElement(
-        "div",
-        {
-          className: "w-full h-full bg-gradient-to-t from-red-600/20 via-red-500/5 to-transparent opacity-100 blur-md"
-        }
-      ), /* @__PURE__ */ import_react3.default.createElement("div", { className: "absolute bottom-0 h-[2px] w-8 rounded-full bg-red-500 shadow-[0_-2px_15px_2px_rgba(239,68,68,0.8)] z-20" }))
+      /* @__PURE__ */ import_react3.default.createElement("div", { className: "relative w-full h-full flex flex-col items-center justify-end" }, /* @__PURE__ */ import_react3.default.createElement("div", { className: "w-full h-full bg-gradient-to-t from-red-600/20 via-red-500/5 to-transparent opacity-100 blur-md" }), /* @__PURE__ */ import_react3.default.createElement("div", { className: "absolute bottom-0 h-[2px] w-8 rounded-full bg-red-500 shadow-[0_-2px_15px_2px_rgba(239,68,68,0.8)] z-20" }))
     ), /* @__PURE__ */ import_react3.default.createElement("div", { className: "relative z-20 flex w-full h-full justify-between items-center" }, tabs.map((tab, index) => {
       const isActive = activeTabId === tab.id;
       const Icon2 = tab.icon;
@@ -698,30 +669,22 @@ var DemoComponent = (() => {
         "button",
         {
           key: tab.id,
-          onClick: () => onTabChange(tab.id),
+          onClick: () => onTabChange && onTabChange(tab.id),
           className: "group relative flex flex-1 items-center justify-center outline-none h-full",
-          "aria-label": tab.label
+          "aria-label": tab.label,
+          type: "button"
         },
-        /* @__PURE__ */ import_react3.default.createElement(
-          "div",
+        /* @__PURE__ */ import_react3.default.createElement("div", { className: "relative flex flex-col items-center justify-center transition-all duration-300 ease-out" }, /* @__PURE__ */ import_react3.default.createElement(
+          Icon2,
           {
-            className: "relative flex flex-col items-center justify-center transition-all duration-300 ease-out"
-          },
-          /* @__PURE__ */ import_react3.default.createElement(
-            Icon2,
-            {
-              size: 26,
-              strokeWidth: isActive ? 2 : 1.5,
-              className: `
-
+            size: 26,
+            strokeWidth: isActive ? 2 : 1.5,
+            className: `
                       relative z-10 transition-colors duration-300
-
                       ${isActive ? "text-white drop-shadow-[0_0_12px_rgba(239,68,68,1)]" : "text-white/20 group-hover:text-red-400"}
-
                     `
-            }
-          )
-        )
+          }
+        ))
       );
     }))));
   };
@@ -739,6 +702,23 @@ var DemoComponent = (() => {
     )), /* @__PURE__ */ import_react4.default.createElement("div", { className: "mt-8 text-white" }, /* @__PURE__ */ import_react4.default.createElement("p", null, "Active Tab: ", activeTab)));
   };
   var demo_default = PremiumNavBarDemo;
+    // Expose React and ReactDOM globally for the demo
+  try {
+    if (typeof require_react === 'function') {
+      window.React = require_react();
+    }
+  } catch (e) {
+    console.warn('Could not expose React globally:', e);
+  }
+  
+  try {
+    if (typeof require_react_dom === 'function') {
+      window.ReactDOM = require_react_dom();
+    }
+  } catch (e) {
+    console.warn('Could not expose ReactDOM globally:', e);
+  }
+  
   return __toCommonJS(demo_exports);
 })();
 /*! Bundled license information:
