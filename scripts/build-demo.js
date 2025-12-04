@@ -85,20 +85,27 @@ async function buildDemos() {
       console.error('Global error:', message, 'at', source, ':', lineno, ':', colno);
       document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>' + message + '</p><p class="text-xs mt-2">Check console for details</p></div>';
     };
-    
-    // Ensure React and ReactDOM are available globally
-    window.React = window.React || React;
-    window.ReactDOM = window.ReactDOM || ReactDOM;
   </script>
   
-  <!-- Load React and ReactDOM from CDN as fallback -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Load React and ReactDOM from CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   
   <script>
-    // Ensure React and ReactDOM are available globally after CDN load
-    window.React = window.React || React;
-    window.ReactDOM = window.ReactDOM || ReactDOM;
+    // Ensure React and ReactDOM are available globally
+    window.React = React;
+    window.ReactDOM = ReactDOM;
+    
+    // Verify React and ReactDOM are loaded
+    console.log('React version:', React.version);
+    console.log('ReactDOM available:', !!ReactDOM);
+    
+    // Check if createRoot is available (React 18+)
+    if (typeof ReactDOM.createRoot === 'function') {
+      console.log('ReactDOM.createRoot is available');
+    } else {
+      console.warn('ReactDOM.createRoot is not available');
+    }
   </script>
   
   <!-- Load the bundled component -->
@@ -113,15 +120,20 @@ async function buildDemos() {
       if (Component) {
         // Create root element and render
         const rootElement = document.getElementById('root');
-        // Use older ReactDOM.render for better compatibility
-        if (window.ReactDOM && window.ReactDOM.createRoot) {
+        
+        // Check if ReactDOM is available
+        if (!window.ReactDOM) {
+          throw new Error('ReactDOM is not available');
+        }
+        
+        // Use createRoot for React 18+ or fallback to render for older versions
+        if (typeof window.ReactDOM.createRoot === 'function') {
           const root = window.ReactDOM.createRoot(rootElement);
           root.render(window.React.createElement(Component));
-        } else if (window.ReactDOM) {
+        } else if (typeof window.ReactDOM.render === 'function') {
           window.ReactDOM.render(window.React.createElement(Component), rootElement);
         } else {
-          // Fallback if ReactDOM is not available
-          rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component loaded but React DOM not available.</p></div>';
+          throw new Error('Neither ReactDOM.createRoot nor ReactDOM.render is available');
         }
       } else {
         document.getElementById('root').innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">${folder} Demo</h2><p class="text-gray-600">Component not found.</p></div>';
