@@ -23,9 +23,14 @@
       console.error('Global error:', message, 'at', source, ':', lineno, ':', colno);
       document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>' + message + '</p><p class="text-xs mt-2">Check console for details</p></div>';
     };
-    
-    // Self-contained rendering function
-    function renderComponent() {
+  </script>
+  
+  <!-- Load the bundled component (includes all dependencies: React, ReactDOM, lucide-react) -->
+  <script src="./PremiumNavBar.bundle.js"></script>
+  
+  <script>
+    // Render the component
+    document.addEventListener('DOMContentLoaded', function() {
       try {
         // Check if we have the component
         if (typeof DemoComponent === 'undefined') {
@@ -50,22 +55,22 @@
           return;
         }
         
-        // Simple rendering without React if possible
-        rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component loaded but static rendering only.</p></div>';
+        // Use the bundled React and ReactDOM
+        if (typeof ReactDOM !== 'undefined' && typeof ReactDOM.createRoot === 'function') {
+          // React 18+ rendering
+          const root = ReactDOM.createRoot(rootElement);
+          root.render(React.createElement(Component));
+        } else if (typeof ReactDOM !== 'undefined' && typeof ReactDOM.render === 'function') {
+          // Older React rendering
+          ReactDOM.render(React.createElement(Component), rootElement);
+        } else {
+          // Fallback - show static content
+          rootElement.innerHTML = '<div class="p-4 text-center"><h2 class="text-xl font-bold mb-2">PremiumNavBar Demo</h2><p class="text-gray-600">Component loaded successfully!</p></div>';
+        }
       } catch (error) {
-        console.error('Error in renderComponent:', error);
+        console.error('Error rendering component:', error);
         document.getElementById('root').innerHTML = '<div class="p-4 text-center text-red-500"><h2 class="text-xl font-bold mb-2">Error</h2><p>Failed to render component: ' + error.message + '</p></div>';
       }
-    }
-  </script>
-  
-  <!-- Load the bundled component (includes all dependencies) -->
-  <script src="./PremiumNavBar.bundle.js"></script>
-  
-  <script>
-    // Try to render the component
-    document.addEventListener('DOMContentLoaded', function() {
-      renderComponent();
     });
   </script>
 </body>
